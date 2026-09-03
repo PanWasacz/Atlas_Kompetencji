@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas Kompetencji</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDE6D6;
+  --paper2:#E4DAC3;
+  --card:#FBF8F1;
+  --ink:#332A1F;
+  --ink-soft:#6B5D4A;
+  --line:#CBBD9E;
+  --forest:#24463A;
+  --forest2:#3B6353;
+  --brass:#A97B33;
+  --brass-light:#C99A4C;
+  --lvl1:#A8432B;
+  --lvl3:#C17A2E;
+  --lvl5:#96872F;
+  --lvl7:#3F7860;
+  --lvl9:#9C7412;
+  --radius:14px;
+  --shadow:0 2px 10px rgba(51,42,31,.08), 0 1px 2px rgba(51,42,31,.08);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  background-image:
+    radial-gradient(ellipse at 15% 8%, rgba(169,123,51,.10), transparent 45%),
+    radial-gradient(ellipse at 90% 92%, rgba(36,70,58,.10), transparent 45%);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  line-height:1.5;
+  min-height:100vh;
+}
+h1,h2,h3{font-family:'Playfair Display',serif; margin:0 0 .3em; color:var(--forest);}
+.mono{font-family:'JetBrains Mono',monospace;}
+#app{max-width:1400px;margin:0 auto;padding:28px 24px 80px;}
+.eyebrow{
+  text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;font-weight:600;
+  color:var(--brass);margin-bottom:6px;
+}
+button{font-family:inherit;cursor:pointer;}
+button:focus-visible, .pill:focus-visible, .dot:focus-visible{outline:3px solid var(--brass-light); outline-offset:2px;}
+
+/* ---------- top compass header ---------- */
+.top-header{display:flex;align-items:center;gap:14px;margin-bottom:26px;}
+.compass-mark{
+  width:44px;height:44px;border-radius:50%;
+  border:2px solid var(--forest); position:relative;flex:none;
+  background:
+    conic-gradient(from 0deg, transparent 0 92deg, var(--brass) 92deg 98deg, transparent 98deg 182deg, var(--forest) 182deg 188deg, transparent 188deg 360deg);
+}
+.compass-mark::after{content:'';position:absolute;inset:0;margin:auto;width:6px;height:6px;border-radius:50%;background:var(--forest);top:0;bottom:0;left:0;right:0;}
+.top-title{font-family:'Playfair Display',serif;font-weight:800;font-size:1.15rem;color:var(--forest);letter-spacing:.02em;}
+.top-sub{font-size:.78rem;color:var(--ink-soft);}
+
+/* ---------- stepper ---------- */
+.stepper{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:22px;padding:10px 12px;
+  background:var(--card);border:1px solid var(--line);border-radius:999px;box-shadow:var(--shadow);}
+.dot{
+  width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--paper2);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;flex:none;
+  transition:transform .15s ease, border-color .15s ease;
+}
+.dot.done{border-color:var(--forest2); background:#e7efe9;}
+.dot.current{border-color:var(--brass); background:#fbf1de; transform:scale(1.12);}
+.dot.skip{border-style:dashed;}
+.step-line{flex:1;height:2px;background:var(--line);min-width:8px;}
+.results-flag{margin-left:auto;font-size:.78rem;color:var(--ink-soft);white-space:nowrap;padding:0 6px;}
+
+/* ---------- cards / sections ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px;margin-bottom:18px;}
+.intro-hero{text-align:left;margin-bottom:8px;}
+.intro-hero h1{font-size:2rem;}
+.intro-hero p{color:var(--ink-soft);max-width:60ch;}
+
+.qblock{margin:20px 0;}
+.qlabel{font-weight:600;margin-bottom:8px;color:var(--forest);}
+.qhint{font-size:.8rem;color:var(--ink-soft);margin:-4px 0 8px;}
+.pillrow{display:flex;flex-wrap:wrap;gap:8px;}
+.pill{
+  border:1.5px solid var(--line);background:var(--paper2);color:var(--ink);
+  padding:8px 14px;border-radius:999px;font-size:.86rem;font-weight:500;transition:.15s;
+}
+.pill:hover{border-color:var(--brass);}
+.pill.active{background:var(--forest);border-color:var(--forest);color:var(--card);}
+
+.btn{
+  border:none;padding:11px 20px;border-radius:10px;font-weight:600;font-size:.92rem;
+  display:inline-flex;align-items:center;gap:6px;transition:.15s;
+}
+.btn-primary{background:var(--forest);color:var(--card);}
+.btn-primary:hover{background:var(--forest2);}
+.btn-ghost{background:transparent;color:var(--ink-soft);border:1.5px solid var(--line);}
+.btn-ghost:hover{border-color:var(--brass);color:var(--ink);}
+.btn-text{background:none;color:var(--brass);font-weight:600;padding:6px 4px;}
+.btn-text:hover{color:var(--forest);}
+.btn[disabled]{opacity:.4;cursor:not-allowed;}
+.navrow{display:flex;justify-content:space-between;align-items:center;margin-top:22px;gap:10px;flex-wrap:wrap;}
+.navrow-left,.navrow-right{display:flex;gap:10px;align-items:center;}
+
+/* ---------- assessment ---------- */
+.comp-head{display:flex;gap:14px;align-items:flex-start;margin-bottom:6px;}
+.comp-icon{font-size:2.1rem;line-height:1;}
+.comp-aspects{font-size:.82rem;color:var(--ink-soft);font-style:italic;margin:2px 0 0;}
+.comp-instruction{font-size:.85rem;color:var(--ink-soft);margin:10px 0 16px;padding:8px 12px;background:var(--paper2);border-radius:8px;display:inline-block;}
+.live-preview{margin-left:auto;text-align:right;flex:none;}
+.live-score{font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--forest);}
+.live-badge{font-size:.72rem;color:var(--ink-soft);max-width:150px;}
+
+.grid-levels-wrap{overflow-x:auto;padding-bottom:6px;margin:0 -2px;}
+.aspect-table{border-collapse:collapse;width:100%;min-width:1020px;table-layout:fixed;}
+.aspect-table col.col-label{width:180px;}
+.aspect-table th.level-head{padding:9px 10px;color:#fff;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.02em;text-align:left;vertical-align:top;}
+.level-count{font-weight:500;text-transform:none;letter-spacing:0;font-size:.7rem;opacity:.9;display:block;margin-top:3px;}
+.aspect-table th.asp-th{
+  position:sticky;left:0;z-index:2;background:var(--paper2);
+  text-align:left;font-size:.76rem;font-weight:700;color:var(--ink);
+  padding:9px 10px;vertical-align:top;border-right:2px solid var(--line);
+}
+.asp-corner{position:sticky;left:0;z-index:3;background:var(--paper2);border-right:2px solid var(--line);}
+.aspect-table td.asp-td{border:1px solid var(--line);padding:5px;vertical-align:top;background:#fff;}
+.aspect-table tbody tr:nth-child(odd) td.asp-td{background:#fdfbf6;}
+.aspect-table tbody tr:hover td.asp-td, .aspect-table tbody tr:hover th.asp-th{background:#f3ecd8;}
+.asp-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;flex:none;}
+.asp-empty{color:var(--line);font-size:.75rem;padding:6px 4px;display:block;}
+.chk{display:flex;gap:6px;align-items:flex-start;padding:5px 6px;border-radius:6px;font-size:.8rem;cursor:pointer;border-left:3px solid transparent;}
+.chk:hover{background:var(--paper2);}
+.chk input{margin-top:3px;flex:none;width:15px;height:15px;accent-color:var(--forest);}
+
+/* ---------- results ---------- */
+.radar-wrap{display:flex;justify-content:center;padding:6px 0 4px;}
+.legend{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;font-size:.78rem;color:var(--ink-soft);margin-top:4px;}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.swatch{width:14px;height:14px;border-radius:3px;display:inline-block;}
+
+.score-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:6px;}
+.score-card{border-left:5px solid var(--line);background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+.score-card .sc-top{display:flex;justify-content:space-between;align-items:center;}
+.sc-name{font-weight:700;font-size:.92rem;color:var(--forest);}
+.sc-num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.3rem;}
+.sc-badge{margin-top:4px;font-size:.78rem;padding:4px 9px;border-radius:999px;color:#fff;display:inline-block;}
+.sc-bar{height:6px;border-radius:4px;background:var(--paper2);margin-top:10px;overflow:hidden;}
+.sc-bar > div{height:100%;}
+.sc-jump{font-size:.72rem;margin-top:8px;display:inline-block;color:var(--brass);cursor:pointer;font-weight:600;}
+.sc-jump:hover{text-decoration:underline;}
+.sc-goals{margin-top:10px;font-size:.78rem;}
+.sc-goals summary{cursor:pointer;color:var(--forest2);font-weight:600;}
+.goal-group{margin-top:8px;}
+.goal-group b{font-weight:600;color:var(--ink-soft);font-size:.74rem;}
+.goal-group ul{margin:4px 0 0;padding-left:0;list-style:none;}
+.goal-group li{display:flex;gap:6px;align-items:baseline;padding:3px 0;border-bottom:1px dashed var(--line);}
+.goal-lvl{flex:none;font-size:.68rem;font-weight:700;color:var(--brass);}
+
+.func-row{border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:10px;background:#fff;}
+.func-row.target{border:2px solid var(--brass);background:#fdf6e9;}
+.func-row.met{border-left:5px solid var(--forest2);}
+.func-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.func-name{font-weight:700;color:var(--forest);}
+.func-status{font-size:.78rem;font-weight:600;padding:3px 10px;border-radius:999px;}
+.status-met{background:#e2efe8;color:var(--forest2);}
+.status-near{background:#fbeed6;color:var(--brass);}
+.status-far{background:#f3e5e0;color:var(--lvl1);}
+.func-reqs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.req-chip{font-size:.72rem;padding:3px 8px;border-radius:6px;background:var(--paper2);}
+.req-chip.ok{background:#e2efe8;color:var(--forest2);}
+.req-chip.bad{background:#f3e5e0;color:var(--lvl1);}
+
+.section-title{margin-top:34px;}
+.small-muted{font-size:.8rem;color:var(--ink-soft);}
+@media print{
+  .no-print{display:none !important;}
+  body{background:#fff;}
+  .card{box-shadow:none;break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =========================================================
+   DANE / DATA
+   ========================================================= */
+const LEVEL_VALUES=[1,3,5,7,9];
+const LEVEL_NAMES=['Poniżej oczekiwań','Wymaga rozwoju','Świadomy i sprawny','Zaawansowany','Mistrz'];
+const LEVEL_COLORS=['var(--lvl1)','var(--lvl3)','var(--lvl5)','var(--lvl7)','var(--lvl9)'];
+
+const COMP = {
+sam:{
+  key:'sam', name:'Samodzielność i Rzetelność', icon:'🐆', accent:'#A8432B',
+  aspects:['wykorzystanie umiejętności harcerskich do skutecznego działania','stawianie czoła wyzwaniom i trudnościom','planowanie','samokontrola','motywacja','rzetelność','samorozwój'],
+  badges:['Wymaga nadzoru i pomocy — niesamodzielny','Niesamodzielny, wymaga motywowania','Zaradny, zdolny do rzetelnej pracy','Samodzielny, rzetelny','W pełni samodzielny i rzetelny — daje dobry przykład'],
+  items:[
+    ['Nie wykazuje się wiedzą i umiejętnościami wymaganymi na posiadany stopień harcerski.','W obliczu trudności poddaje się lub udaje, że nie widzi problemu, by uniknąć podjęcia działania.','Działa chaotycznie i bez planu.','Często zdarza mu się spóźnić lub nie dotrzymać terminu.','Łatwo daje się ponosić emocjom. Nie widzi potrzeby panowania nad nimi.','Pozostawiony bez nadzoru i motywacji zewnętrznej zniechęca się i nie doprowadza zadań do końca.','Wykonuje swoje zadania niedbale (byle jak).','Nie przyjmuje krytycznej informacji zwrotnej na swój temat.','Nie dostrzega swoich mocnych i słabych stron.','Nie wymaga od siebie i nie podejmuje pracy nad sobą z własnej inicjatywy.'],
+    ['Wykazuje się minimalnym poziomem wiedzy i umiejętności wymaganych na posiadany stopień harcerski, ale bez chęci ich doskonalenia.','W obliczu trudności wybiera najłatwiejsze – pozorne lub prowizoryczne rozwiązania.','Wymaga szczegółowych instrukcji przy wykonywaniu bardziej złożonych zadań.','Zwykle dotrzymuje terminów i stara się dobrze wykorzystywać czas, prowadząc terminarz i listę zadań.','Wymaga pomocy w planowaniu bardziej złożonych działań.','W sytuacji stresującej ponoszą go emocje, powodując nieprzemyślane działanie.','Doprowadzanie rozpoczętych spraw do końca sprawia mu wyraźne trudności, zwłaszcza w ostatnich fazach działania lub gdy pojawiają się problemy.','Potrafi pracować starannie tylko przy wykonywaniu prostych i krótkotrwałych zadań, zwłaszcza gdy oczekuje nagrody.','Chętnie przyjmuje informację zwrotną.','Dostrzega swoje mocne i słabe strony i próbuje nad nimi pracować.'],
+    ['Wykorzystuje biegle i chętnie doskonali wymaganą wiedzę i umiejętności harcerskie.','Daje sobie radę w typowych sytuacjach życia harcerskiego.','Mierzy się z trudnościami, poszukując najlepszych, choćby wymagających wysiłku rozwiązań.','Nie oczekuje szczegółowych instrukcji i pomocy podczas wykonywania zadań.','Planuje kolejne kroki w wykonywaniu bardziej złożonych zadań.','Stara się panować nad silnymi emocjami i trzeźwo oceniać sytuację.','Przełamuje własne zniechęcenie, znajdując wewnętrzną motywację do długotrwałego, systematycznego działania.','Przykłada się do wykonania zadań, które go szczególnie interesują, pozostałe wykonuje mniej rzetelnie.','Aktywnie zabiega o informację zwrotną o sobie i bierze ją pod uwagę.','Rozwija swoje zainteresowania i podnosi potrzebne kompetencje.','Podejmuje udane próby tworzenia pożądanych i zmiany niekorzystnych nawyków.'],
+    ['Samodzielnie poszerza swoje umiejętności harcerskie ponad obowiązujący standard.','Przekazuje swoją wiedzę i umiejętności harcerskie innym.','Podejmuje działania i daje sobie radę w nietypowych i awaryjnych sytuacjach.','Wykonuje zadania samodzielnie.','Reaguje na problemy i podejmuje działania, aby je rozwiązać.','Tworzy elastyczne i czytelne plany działania.','Zachowuje spokój i pewność siebie w sytuacjach podwyższonego stresu.','Wytrwale dąży do osiągnięcia zamierzonych efektów.','Stara się wykonać najlepiej jak potrafi każdą pracę, jakiej się podjął.','Stawia sobie wysokie wymagania.','Efektywnie stosuje techniki pracy nad sobą prowadzące do kształtowania charakteru i postaw.'],
+    ['Postępuje tak, aby poprzez przykład własny inspirować innych do pogłębiania wiedzy i doskonalenia umiejętności.','Chętnie podejmuje ambitne wyzwania i je realizuje.','Trafnie dobiera efektywne metody osiągnięcia zamierzonych celów.','Planując, przewiduje i zapobiega potencjalnym komplikacjom i zagrożeniom.','Zgłasza propozycje rozwiązań systemowych.','W sytuacjach krytycznych reaguje trafnie i zdecydowanie.','Wspiera i motywuje innych w realizacji ich zadań.','Pracuje rzetelnie niezależnie od tego, czy pracę wykonuje z własnej inicjatywy, czy została mu zlecona w ramach obowiązków.','Samodzielnie kieruje własnym rozwojem bez potrzeby motywowania z zewnątrz.','Efektywnie wspiera innych w pracy nad sobą (np. jako opiekun).']
+  ],
+  aspectOf:[
+    [0,1,2,2,3,4,5,6,6,6],
+    [0,1,1,2,2,3,4,5,6,6],
+    [0,1,1,1,2,3,4,5,6,6,6],
+    [0,0,1,1,1,2,3,4,5,6,6],
+    [0,1,2,2,2,3,4,5,6,6]
+  ]
+},
+wsp:{
+  key:'wsp', name:'Współpraca i Odpowiedzialność', icon:'🐜', accent:'#6E7B35',
+  aspects:['panowanie nad emocjami i reakcjami','empatia i dbanie o relacje','współpraca','zaangażowanie się w służbę','przestrzeganie prawa i przepisów','odpowiedzialność osobista','utożsamianie się z ideałami, celami i strategią działania ZHR'],
+  badges:['Nie współpracuje, nie poczuwa się do odpowiedzialności','Ma trudności we współpracy, nie przejawia inicjatywy, unika odpowiedzialności','Prawidłowo współpracuje, odpowiedzialny','Efektywnie współpracuje, angażuje się, bierze odpowiedzialność za środowisko lokalne','Rozwija współpracę, zaangażowany, w pełni odpowiedzialny'],
+  items:[
+    ['Łatwo ulega negatywnym emocjom otoczenia.','Zwykle kieruje się własnym dobrem, nie licząc się z innymi.','Chętniej rywalizuje niż współpracuje w grupie.','Nie dotrzymuje ustaleń ważnych dla realizacji wspólnych zadań.','Unika lub niechętnie uczestniczy w zorganizowanej służbie.','Nie zna dotyczących go przepisów, więc nie stosuje się do nich.','Nie analizuje przyczyn własnych błędów i niepowodzeń.','Utożsamia harcerstwo wyłącznie z własną drużyną lub szczepem.'],
+    ['Zwykle powstrzymuje się od gwałtownych i obraźliwych reakcji, ale w sytuacjach konfliktowych ma z tym wyraźne trudności.','Poproszony o pomoc udziela jej, o ile nie burzy to jego planów i nie zmusza do znacznego wysiłku.','Z trudem podporządkowuje się podziałowi zadań i zasadom pracy w grupie.','Robi tylko to, co musi, co wynika z zakresu obowiązków lub z polecenia przełożonego, nie wykazując inicjatywy i zaangażowania.','Zna obowiązujące go przepisy, ale stosuje się do nich wybiórczo.','W razie niepowodzeń szuka winnych i przyczyn na zewnątrz zamiast w sobie.','Nie angażuje się we wspólne działania poza własną drużyną / szczepem i nie widzi takiej potrzeby.'],
+    ['W sytuacjach konfliktowych reaguje w sposób aprobowany społecznie.','Reaguje z własnej inicjatywy w obliczu poruszających go przejawów czyjegoś nieszczęścia lub krzywdy.','Harmonijnie współpracuje we wspólnych przedsięwzięciach, ale rzadko przejawia inicjatywę.','Chętnie przystępuje do zorganizowanej służby i aktywnie w niej uczestniczy.','Konsekwentnie przestrzega obowiązujących przepisów.','Przyznaje się do błędów i zgłasza gotowość ich naprawiania.','Zna zasady statutowe ZHR i stosuje się do nich.','Chętnie nawiązuje współdziałanie z innymi drużynami.'],
+    ['Neutralizuje negatywne emocje w swoim otoczeniu.','Wczuwa się w położenie bliskich mu osób, dostrzega ich potrzeby i reaguje odpowiednio do sytuacji.','Jest aktywny i wnosi istotny wkład w pracę zespołu, usprawniając jego działanie.','Poszukuje nowych pól służby dla siebie i z oddaniem się w nią angażuje.','Pilnuje przestrzegania prawa i przepisów w najbliższym otoczeniu.','Analizuje przyczyny własnych niepowodzeń i błędów. Z własnej inicjatywy próbuje je naprawiać.','Identyfikuje się z organizacją, z jej celami i zasadami statutowymi.','Inicjuje i organizuje współpracę pomiędzy jednostkami działającymi w środowisku lokalnym.'],
+    ['Wzbudza pozytywne emocje u innych.','Próbuje zażegnywać konflikty poprzez proponowanie akceptowanych kompromisów.','Interesuje się sytuacją ludzi w swoim otoczeniu i w razie potrzeby odpowiednio reaguje.','Aktywnie zabiega o doskonałe efekty działania zespołu, rekomenduje nowe rozwiązania, a gdy trzeba, pomaga kolegom.','Z oddaniem i systematycznie pełni służbę na wybranym polu, inspirując i zachęcając do niej innych.','Zabiega o przestrzeganie prawa w przestrzeni publicznej.','Wyciąga trafne wnioski z własnych błędów i niepowodzeń. Tworzy warunki do tego, aby ich nie powielać w przyszłości.','Angażuje się w działania mające na celu rozwój ZHR i poprawę skuteczności wychowania.']
+  ],
+  aspectOf:[
+    [0,1,1,2,3,4,5,6],
+    [0,1,2,3,4,5,6],
+    [0,1,2,3,4,5,6,6],
+    [0,1,2,3,4,5,6,6],
+    [0,0,1,2,3,4,5,6]
+  ]
+},
+kom:{
+  key:'kom', name:'Komunikacja', icon:'🦇', accent:'#3B4A6B',
+  aspects:['poprawność językowa','dykcja, operowanie głosem i mowa ciała','precyzyjne formułowanie myśli','przykuwanie uwagi','aktywne słuchanie','droga służbowa','komunikacja pisemna','kultura komunikacji i dążenie do prawdy'],
+  badges:['Słaba komunikacja','Komunikacja jednostronna','Komunikacja dwustronna','Dostosowywanie komunikacji do odbiorcy','Sprawne komunikowanie skomplikowanych treści'],
+  items:[
+    ['Popełnia liczne błędy językowe (gramatyczne, leksykalne lub fonetyczne).','Mówi zbyt szybko lub tak, że trudno zrozumieć wypowiadane słowa.','Wypowiada się monotonnie, nie modulując głosu, bez intonacji.','Unika kontaktu wzrokowego z rozmówcą.','Komunikuje się w sposób niezrozumiały, chaotyczny, gubi wątek, nie potrafi przekazać istotnych kwestii.','Nie sprawdza rozumienia przekazywanych treści.','Nie potrafi nawet na krótko przykuć uwagi słuchaczy.','Okazuje brak zainteresowania tym, co mówi rozmówca (nie przytakuje, nie odpowiada na pytania, nie zadaje pytań, zajmuje się czymś innym).','Nie odpowiada na próby kontaktu wymagające reakcji (np. na maile).','Nie odróżnia faktów od opinii.','Nie weryfikuje prawdziwości informacji, zwłaszcza otrzymywanych za pośrednictwem mediów.'],
+    ['Tylko sporadycznie popełnia błędy językowe.','Mówi wyraźnie (dykcja), tak że słuchacze mogą zrozumieć wypowiadane słowa.','Wyraża się ogólnikowo.','W wypowiedziach posługuje się slangiem branżowym lub używa nieznanego słuchaczom słownictwa naukowego.','Tylko na krótko przykuwa uwagę słuchaczy.','Zadaje pytania, ale nie słucha i nie odnosi się do treści odpowiedzi.','Stosuje pytania zamknięte.','Koncentruje się na mówieniu, a nie na słuchaniu.','Monologuje, nie dopuszcza innych do głosu.','Odpowiada na ważne wiadomości (np. maile) z dużym opóźnieniem.','Tworzy poprawnie proste komunikaty pisemne.','W przekazach medialnych odróżnia i oddziela fakty od opinii.','Weryfikuje prawdziwość informacji medialnych, które wzbudziły jego czujność.','Unika wulgaryzmów w wypowiedziach i w tworzonych komunikatach.'],
+    ['Nie popełnia błędów językowych.','Odpowiednio intonuje i moduluje głos.','Podczas wypowiedzi zachowuje prawidłową postawę ciała i kontakt wzrokowy.','Komunikuje się precyzyjnie.','Sprawdza, czy przekaz został właściwie zrozumiany (parafrazuje).','Potrafi skoncentrować uwagę słuchaczy na szczególnie istotnych wątkach.','Podtrzymuje rozmowę poprzez zadawanie pytań otwartych.','Pozwala innym na pełną wypowiedź – słucha uważnie, nie przerywa.','Bezzwłocznie potwierdza otrzymanie wiadomości drogą służbową.','Poprawnie konstruuje różnego rodzaju złożone komunikaty pisemne (instrukcje, notatki, regulaminy).','Nie przekazuje dalej fałszywych i niezweryfikowanych informacji.','Dba o kulturalną formę tworzonych komunikatów.'],
+    ['Mówi poprawnie po polsku, stosując właściwy dla języka polskiego akcent.','Stosuje gesty i mimikę uwydatniające komunikat i zachęcające do dialogu.','Wykorzystuje porównania, przykłady do wyjaśnienia skomplikowanych kwestii.','Stosuje klaryfikację i podsumowanie, by upewnić się o efektywności komunikacji.','Dopasowuje treść i formę przekazu do odbiorcy.','Utrzymuje uwagę słuchaczy przez cały czas wypowiedzi.','Zachęca rozmówców do wyrażania opinii, w tym do krytyki.','Zna i stosuje zasady odbierania i wysyłania komunikatów drogą służbową.','Dostosowuje komunikaty pisemne do specyfiki i potrzeb odbiorcy.','Dba o to, aby nie dać się zamknąć w bańce informacyjnej. Korzysta z różnych źródeł informacji.'],
+    ['Mówi płynnie poprawną polszczyzną, stosując bogate słownictwo.','Dopasowuje gesty i ton głosu do rozmówcy.','Dyskutuje o złożonych problemach w sposób jasny i wiarygodny.','Prezentuje specjalistyczne problemy (np. prawne, metodyczne) w sposób zrozumiały dla innych.','Obrazuje skomplikowane treści adekwatnymi metaforami.','Wypowiada się w taki sposób, że może zainteresować słuchaczy dowolnym tematem.','Dążąc do celu, angażuje rozmówców w różne formy komunikacji, np. dialog, dyskusję, polemikę, konsultowanie stanowisk, burzę mózgów.','Aktywnie zabiega o wysokie standardy komunikacji w organizacji.','Tworzy interesujące teksty.','Dostrzega mechanizmy manipulacji informacją i skutecznie się przed nią broni.']
+  ],
+  aspectOf:[
+    [0,1,1,1,2,2,3,4,5,7,7],
+    [0,1,2,2,3,4,4,4,4,5,6,7,7,7],
+    [0,1,1,2,2,3,4,4,5,6,7,7],
+    [0,1,2,2,3,3,4,5,6,7],
+    [0,1,2,2,2,3,4,5,6,7]
+  ]
+},
+prz:{
+  key:'prz', name:'Przywództwo', icon:'🐺', accent:'#2F5D46',
+  aspects:['rozumienie idei harcerskiej, silna tożsamość i kręgosłup moralny','przykład osobisty','inicjowanie i przeprowadzanie zmian','budowanie relacji, motywowanie, dostosowanie stylu przywództwa do sytuacji'],
+  badges:['Brak kompetencji','Potencjał wart rozwijania','Słabe przywództwo','Silne przywództwo','Przywództwo połączone z charyzmą'],
+  items:[
+    ['Postrzega Prawo Harcerskie wyłącznie jako zbiór nakazów i zakazów.','Nie zna podstawowych faktów z historii harcerstwa.','Nie orientuje się, jaki jest cel działania harcerstwa i ZHR.','Jest niekonsekwentny – mówi jedno, robi drugie.','Nie potrafi wskazać swoich autorytetów.','Stara się przestrzegać Prawa Harcerskiego w zakresie dosłownego rozumienia zapisów.','Nie zauważa potrzeby zmian i unika angażowania się w reformy.','Nie ma pomysłów i nie przejawia inicjatywy.','Nie tworzy prawidłowych relacji, odnosi się do innych z lekceważeniem i bez szacunku.'],
+    ['Postrzega Prawo Harcerskie jako drogowskaz wskazujący wartości chrześcijańskie i zarazem ideały i cele samodoskonalenia się.','Zna podstawowe fakty z historii harcerstwa.','Zna cele statutowe ZHR, ale nie potrafi ich osadzić w szerszym kontekście aktualnej sytuacji społecznej.','Potrafi wskazać swoje autorytety.','Motywowany z zewnątrz pracuje nad sobą i widać pierwsze efekty tej pracy.','Zauważa potrzebę zmian, nie opiera się przed nimi, ale ich nie inicjuje.','Przedstawia pomysł, jednak nie potrafi nim zainteresować.','Pozwala odczuwać innym w swoim otoczeniu, że są dla niego ważni.'],
+    ['Postrzega Prawo Harcerskie jako zbiór ideałów i kierunków wychowania harcerskiego.','Potrafi scharakteryzować poszczególne okresy historii harcerstwa.','Potrafi krytycznie oceniać społeczne autorytety.','Samodzielnie pracuje nad sobą w taki sposób, aby dawać dobry przykład stosowania Prawa Harcerskiego i samodoskonalenia się.','Potrafi przekonać grupę dobrze znanych osób do realizacji własnych pomysłów.','Skutecznie przeprowadza zainicjowane zmiany w swoim najbliższym otoczeniu (np. w drużynie).','Wie, jaki jest naturalny dla niego styl przewodzenia, zna jego zalety i wady i próbuje go udoskonalać.'],
+    ['Potrafi wskazać ideowe powody kolejnych modyfikacji Prawa Harcerskiego.','Potrafi wyjaśnić związek zjawisk historycznych w harcerstwie z faktami i przemianami, jakie zachodziły w Polsce i na świecie.','Stanowi silnie inspirujący wzór osoby żyjącej Prawem Harcerskim i będącej w stałym, osobistym rozwoju.','Wpływa na postawy środowiska.','Tworzy trafne i atrakcyjne wizje działania. Potrafi zainspirować nimi szerokie grono osób, z którymi wcześniej nie współpracował, i przekonać je do wspólnego działania.','Skutecznie przeprowadza zmiany w środowisku szerszym niż jego najbliższe otoczenie (np. w hufcu).','Umiejętnie współpracuje z ludźmi niezorientowanymi na zmiany.','Wyszukuje potencjalnych liderów i rozwija ich.','Zapala do służby instruktorskiej młodszych i osoby niezwiązane dotąd z harcerstwem.','W zależności od sytuacji używa przynajmniej dwóch różniących się stylów przewodzenia.'],
+    ['Dostrzega obecne i przewiduje przyszłe wyzwania ideowe harcerstwa.','Rozumie zjawiska historyczne i potrafi wyciągać wnioski z przeszłości na przyszłość.','Dzieli się refleksjami na temat kierunków zmian, jakie powinny zachodzić w harcerstwie, by odpowiadało ono na wyzwania przyszłości.','Dba o realizowanie wartości w organizacji.','Dba o dobre relacje z innymi organizacjami.','Skutecznie propaguje ideały harcerskie.','Całym życiem daje świadectwo, które inspiruje i pociąga za nim innych do kierowania się Prawem Harcerskim i do samorozwoju.','Wnosi istotny wkład w projektowanie i wdrażanie nowych wizji działania lub długofalowych zmian w szerokiej skali (np. chorągwi, organizacji).','Jego inicjatywy, realizowane i rozwijane przez następców, przynoszą trwałe efekty.','Potrafi zapalić do służby instruktorskiej osoby niezwiązane dotąd z harcerstwem.','Dostosowuje styl przewodzenia do sytuacji i potrzeb osób, którym zamierza przewodzić.']
+  ],
+  aspectOf:[
+    [0,0,0,0,0,1,2,2,3],
+    [0,0,0,0,1,2,2,3],
+    [0,0,0,1,2,2,3],
+    [0,0,1,1,2,2,2,2,2,3],
+    [0,0,0,0,0,0,1,2,2,2,3]
+  ]
+},
+ksz:{
+  key:'ksz', name:'Kształcenie', icon:'🦉', accent:'#2E6B6B',
+  aspects:['badanie potrzeb i programowanie','efektywna realizacja','udzielanie informacji zwrotnej','badanie efektów i ewaluacja','praca w zespole kształceniowym','kształcenie kadry kształcącej'],
+  badges:['Brak predyspozycji i przygotowania','Nieprzygotowane próby prowadzenia zajęć','Efektywne prowadzenie zajęć szkoleniowych','Efektywne prowadzenie kursów','Efektywne zarządzanie systemem kształcenia'],
+  items:[
+    ['Nie przygotowuje się do zajęć, które ma prowadzić.','Prowadzi zajęcia w sposób chaotyczny.','Nie udziela informacji zwrotnej uczestnikom zajęć.','Nie interesuje się oceną własnych zajęć.'],
+    ['Planuje zajęcia wyłącznie w formie listy tematów do poruszenia.','Tworzy konspekty zajęć, jednak w taki sposób, że tylko on sam może z nich korzystać.','Prowadzi zajęcia, zdając się na improwizację.','Udziela informacji zwrotnej uczestnikom zajęć, zdając się wyłącznie na intuicję.','Wystarcza mu ogólna ocena przeprowadzonych zajęć typu „fajne”.'],
+    ['Dopasowuje treść i formę zajęć do wskazanych celów kształceniowych.','Planując zajęcia, stara się bazować na doświadczeniu uczestników (cykl Kolba).','Tworzy zrozumiałe konspekty zajęć, tak aby mogli z nich korzystać inni.','Potrafi przeprowadzić min. siedem różnych form zajęć aktywizujących.','Stara się udzielać informacji zwrotnej uczestnikom zajęć, opierając się na Atlasie Kompetencji.','Stosuje podstawowe metody ewaluacji zajęć.','Zabiega o uzyskanie szczegółowej informacji zwrotnej dotyczącej oceny przeprowadzonych zajęć.','Aktywnie uczestniczy w pracach zespołu kursowego lub innej formie wymiany doświadczeń kształceniowych.'],
+    ['Bada potrzeby uczestników kształcenia, wykorzystując dostępne źródła i Atlas Kompetencji.','Formułuje cele kształcenia, łącząc wytyczne Atlasu Kompetencji z potrzebami uczestników.','Korzysta z wiedzy dotyczącej cyklu Kolba i procesu grupowego.','Formułuje cele rozwoju kompetencji w obszarach: wiedzy, umiejętności i postaw.','Układa program kształcenia, tworząc logiczny ciąg zajęć pozwalający korzystać z efektów wcześniej odbytych zajęć.','Tworzy przejrzystą i użyteczną dokumentację programową kursu.','Świadomie i celowo kształtuje atmosferę kursu.','Stosuje efektywne metody kontroli postępów uczestników kursu.','Ocenia poziom kompetencji uczestników na podstawie Atlasu Kompetencji.','Prawidłowo formułuje informację zwrotną o uczestnikach, wskazując ich mocne i słabe strony w formie celów rozwojowych.','Efektywnie uzyskuje informację zwrotną o kursie od jego uczestników.','Korzysta z różnorodnych źródeł informacji w celu uzyskania oceny osiągniętej efektywności kursu.','Prawidłowo analizuje uzyskane dane ewaluacyjne i wyciąga z nich wnioski na przyszłość służące ulepszeniu kursu.','Efektywnie kieruje zespołem kadry kursu.','Dba o ciągłość pracy zespołu, pozyskuje wartościowych współpracowników i zapewnia przekazywanie doświadczeń.'],
+    ['Potrafi prawidłowo posługiwać się Atlasem Kompetencji, tworzyć profile określonych funkcji i na tej podstawie określać wytyczne dla poszczególnych elementów systemu kształcenia.','Wykorzystuje dostępne źródła informacji do identyfikowania potrzeb kształceniowych chorągwi/organizacji i w badaniu efektywności kształcenia.','Zna różne funkcjonujące systemy kształcenia, dostrzega ich specyfikę, potrafi ocenić ich wady i zalety w kontekście własnego środowiska.','Uwzględnia bieżące potrzeby środowiska w planowaniu systemu kształcenia.','Tworzy nowe i modyfikuje rozwiązania systemowe tak, aby optymalnie wykorzystać istniejący potencjał.','Zarządza systemem kształcenia, dbając o efektywne działanie wszystkich jego elementów (szkoła, komisja, opiekunowie, hufcowi, drużynowi itp.).','Skutecznie nadzoruje prowadzenie dokumentacji kształceniowej.','Zapewnia ewaluację systemu kształcenia na podstawie jednolitych metod i wskaźników mierzenia efektów.','Skutecznie zarządza zmianami w systemie kształcenia i wdraża nowe rozwiązania.','Potrafi przeprowadzić kursy kadry kształcącej na wszystkich trzech poziomach.']
+  ],
+  aspectOf:[
+    [0,1,2,3],
+    [0,0,1,2,3],
+    [0,0,0,1,2,3,3,4],
+    [0,0,0,0,0,1,1,2,2,2,3,3,3,4,4],
+    [0,0,0,0,0,1,1,3,4,5]
+  ]
+},
+zar:{
+  key:'zar', name:'Zarządzanie', icon:'🦅', accent:'#A97B33',
+  aspects:['planowanie','organizowanie pracy i delegowanie','dostosowywanie stylów zarządzania, rozwiązywanie konfliktów','integrowanie ludzi do wspólnego działania','informacja zwrotna i rozwój podwładnych','ewaluacja projektów i procesów'],
+  badges:['Brak zarządzania zespołem','Organizowanie pracy zespołu i instruowanie','Planowanie i kontrolowanie pracy zespołu','Delegowanie zadań i mobilizowanie zespołu','Zarządzanie w sposób partycypacyjny'],
+  items:[
+    ['Nie planuje działań.','Nie zapisuje zadań do realizacji lub po zapisaniu nie korzysta z notatek.','Nie przekształca planów w działania operacyjne zespołu.','Nie zastanawia się nad ryzykiem w swoich działaniach.','Nie monitoruje przebiegu pracy.','Nie rozdziela i nie deleguje zadań.','Przerzuca odpowiedzialność wyłącznie na członków zespołu.','Jego działania mogą powodować konflikty w zespole.','Nie jest zainteresowany budowaniem wspólnoty.','Nie udziela informacji zwrotnej.','Nie podsumowuje pracy zespołu po jej wykonaniu.'],
+    ['Potrzebuje wsparcia/konsultacji w zakresie planowania pracy.','Tworzy plany, ale nie zawsze osiąga zakładane cele.','Przy planowaniu bierze pod uwagę najbardziej oczywiste ryzyka.','Rozdziela zadania na poszczególnych etapach pracy.','Realizuje zadania operacyjne ad hoc.','Daje wskazówki dotyczące sposobu realizacji zadań.','Próbuje kierować zespołem, nie biorąc pod uwagę trudnych relacji pomiędzy jego członkami.','Wspiera budowanie wspólnoty, ale nie przejawia w tym inicjatywy.','Omawia przebieg pracy z podwładnymi, ale nie aktywizuje ich do wyciągania samodzielnych wniosków.','Przekazuje informację zwrotną w sposób niekonstruktywny.','Podsumowuje wykonane zadanie chaotycznie lub tylko częściowo.'],
+    ['Trafnie określa zasoby potrzebne do realizacji celu i efektywnie je wykorzystuje.','Stawia precyzyjne i terminowe cele.','Tworzy listy zadań, prawidłowo wyznacza do nich terminy i osoby.','Przekształca plany w działania operacyjne zespołu.','Rozpoznaje ryzyka, bierze je pod uwagę przy planowaniu.','Wyjaśnia zrozumiale cele realizowanych zadań.','Na bieżąco monitoruje i ocenia stopień realizacji zadań.','Radzi sobie z prostymi konfliktami w zespole.','Aktywnie buduje wspólnotę w swoim najbliższym otoczeniu.','Udziela konstruktywnej informacji zwrotnej.','Po podsumowaniu projektu/zadania zapisuje wnioski, ale w chaotycznej formie.'],
+    ['Tworzy harmonogram, dzieli na etapy i wskazuje kamienie milowe.','Wykonuje analizę ryzyk, uwzględnia ich wpływ na działanie zespołu i projekty.','Planuje rozwój zarządzanej jednostki w perspektywie długofalowej.','Dopasowuje zadania do doświadczenia i kompetencji członków zespołu z myślą o ich rozwoju.','Zapewnia lub wskazuje, jak i gdzie zdobyć niezbędne do realizacji celów zasoby.','Odpowiednio do sytuacji stosuje różne, wyuczone style przywództwa.','Prawidłowo postrzega role grupowe w prowadzonych przez siebie zespołach.','Dostrzega i rozumie źródła konfliktów w swoim zespole i skutecznie im zapobiega.','Dostosowuje motywatory do indywidualnych potrzeb.','Potrafi budować wspólnotę w środowisku osób z podobnym doświadczeniem.','Wskazuje na mocne strony i obszary do rozwoju członków zespołu.','Po podsumowaniu projektu/zadania zapisuje wnioski w ustrukturyzowanej formie.'],
+    ['Tworzy plany strategiczne pozwalające osiągnąć dalekosiężne cele.','Włącza członków zespołu w proces planowania i definiowania celów oraz zasobów niezbędnych do ich realizacji.','Powierza odpowiedzialność za zadania i obszary.','Pozostawia samodzielność w realizacji zadań.','Zarządza zmianą - identyfikuje, reaguje w sposób adekwatny, wprowadza działania korygujące.','Intuicyjnie stosuje odpowiednie style przywództwa w zależności od charakteru zespołu.','Dostrzega role grupowe w prowadzonych przez siebie zespołach i intuicyjnie wykorzystuje ich potencjał.','Potrafi budować wspólnotę wśród osób z różnych środowisk i z różnym doświadczeniem.','Inspiruje członków zespołu do rozwoju kompetencji związanych z treścią wykonywanej pracy.','Trafnie identyfikuje osoby z potencjałem, uczy je i szkoli, przygotowując do przyszłych sukcesji w obrębie organizacji.','Wykorzystuje różnorodne metody rozwojowe (np. szkolenia, instruktaż, coaching, mentoring).','Podsumowuje każdy etap projektu/zadania i zapisuje wnioski w ustrukturyzowanej formie.']
+  ],
+  aspectOf:[
+    [0,0,0,0,1,1,1,2,3,4,5],
+    [0,0,0,1,1,1,2,3,4,4,5],
+    [0,0,0,0,0,1,1,2,3,4,5],
+    [0,0,0,1,1,2,2,2,3,3,4,5],
+    [0,0,1,1,1,2,2,3,4,4,4,5]
+  ]
+},
+kwa:{
+  key:'kwa', name:'Kwatermistrzostwo', icon:'🐦‍⬛', accent:'#4A4038',
+  aspects:['gospodarowanie sprzętem i majątkiem','organizacja obozu','organizacja służby harcerzy','dokumentacja i przepisy finansowe','planowanie wydatków i budżety','pozyskiwanie funduszy','rozliczanie','przekazywanie wiedzy kwatermistrzowskiej'],
+  badges:['Niegospodarność','Gospodarność','Kwatermistrzostwo jednostki','Kwatermistrzostwo HAZ/HAL','Kwatermistrzostwo organizacji'],
+  items:[
+    ['Nie potrafi odpowiednio przygotowywać sprzętu do użycia.','Nie widzi sensu w prowadzeniu ewidencji sprzętu oraz jego oznakowania.','Nie potrafi wziąć faktury z odpowiednimi danymi lub jej poprawnie opisać.','Nie potrafi planować wydatków 1–2-dniowego wydarzenia.','Nie jest świadomy tego, że musi rozliczać się z powierzonych pieniędzy i sprzętu.'],
+    ['Potrafi odpowiednio zakonserwować i przygotować sprzęt do użycia (np. ostrzenie siekiery, wymiana brzeszczotów piły, impregnacja namiotów itp.).','Dba o powierzone mu materiały programowe i sprzęt, nie naraża go na zgubienie i utrzymuje w porządku.','Stara się dbać o zachowanie oznaczenia sprzętu.','Potrafi wziąć fakturę z poprawnymi danymi oraz odpowiednio ją opisać.','Potrafi zaplanować wydatki wycieczki lub biwaku.','Jest świadom konieczności rzetelnego rozliczania się z powierzonych pieniędzy i sprzętu.'],
+    ['Prowadzi magazyn sprzętu.','Zna zasady oznaczania sprzętu.','Poprawnie prowadzi książkę inwentarzową jednostki.','Organizuje prace konserwacyjne sprzętu z aktywnym udziałem harcerzy.','Potrafi opisać fakturę z podziałem kosztów na rodzaje i ująć ją w dokumentacji.','Poprawnie prowadzi książkę finansową jednostki.','Zbiera i dokumentuje składki (członkowskie i programowe).','Planuje wydatki kilkudniowego wyjazdu.','Potrafi skutecznie zgłosić i przeprowadzić akcję zarobkową zgodnie z przepisami.','Wie kto i na jakiej podstawie może występować i zaciągać zobowiązania w imieniu Okręgu / Związku.','Rozlicza się rzetelnie i terminowo.','Wie, dlaczego każda organizacja musi składać roczne, publiczne sprawozdania finansowe i zapoznał się z takim sprawozdaniem.'],
+    ['Potrafi obliczyć i zamówić odpowiednie ilości i rodzaje drewna do budowy obozu.','Zna i stosuje instrukcję sanitarną GIS dotyczącą obozów.','Potrafi rozplanować obóz w terenie.','Planuje i kieruje zaopatrzeniem obozu.','Prowadzi magazyn i odpowiednio zabezpiecza żywność.','Projektuje funkcjonalne kuchnie obozowe i urządzenia sanitarne.','Zna i stosuje przepisy państwowe dotyczące organizacji wypoczynku.','Organizuje efektywną i bezpieczną pracę przy budowie i eksploatacji urządzeń obozowych i wartościowe wychowawcze służby obozowe.','Prowadzi książkę bankową i kasową wraz z opisami wydatków na dokumentach.','Potrafi przyjąć i zaksięgować wypłatę (kwit KP).','Umiejętnie korzysta z ZIHER-a.','Zna regulamin gospodarczo-finansowy ZHR.','Kompletuje dokumentację obozową i składa ją w terminie.','Planuje wydatki i tworzy preliminarze obozowe/kolonijne.','Prawidłowo rozlicza współpracowników i zastępowych z powierzonych im funduszy.'],
+    ['Potrafi rzetelnie sprawdzać dokumentację finansowo-gospodarczą i obozową jednostek.','Potrafi ze zrozumieniem czytać sprawozdanie finansowe i bilans organizacji.','Wie, gdzie szukać interpretacji przepisów prawa.','Potrafi stworzyć budżet jednostki.','Skutecznie poszukuje nowych źródeł dofinansowania i wsparcia materialnego.','Potrafi napisać wniosek dotacyjny.','Potrafi skutecznie rozliczyć grant (dofinansowanie).','Potrafi rozliczać wyjazdy, również w obcych walutach.','Potrafi wytłumaczyć sens i potrzebę zbierania składek członkowskich i programowych.','Potrafi wytłumaczyć sens i potrzebę ubezpieczania działalności harcerskiej.','Potrafi wytłumaczyć powody istnienia rozbudowanej dokumentacji i procedur rozliczania się jednostek.','Potrafi przygotować swojego następcę do kwatermistrzostwa.']
+  ],
+  aspectOf:[
+    [0,0,3,4,6],
+    [0,0,0,3,4,6],
+    [0,0,0,2,3,3,3,4,5,5,6,6],
+    [1,1,1,1,1,1,1,2,3,3,3,3,3,4,6],
+    [3,3,3,4,5,5,6,6,7,7,7,7]
+  ]
+},
+met:{
+  key:'met', name:'Stosowanie Metody', icon:'🕷️', accent:'#6B4A6B',
+  variants:{
+    harcerska:{
+      label:'metodyka harcerska',
+      aspects:['rozumienie harcerskiego systemu wychowania i specyfiki poszczególnych metodyk','stosowanie systemu zastępowego','stosowanie sprawności','stosowanie systemu stopni','rozwijanie kompetencji następców i prowadzenie prób instruktorskich','planowanie pracy','współpraca z rodzicami','współpraca z partnerami zewnętrznymi'],
+      badges:['Nie stosuje metody','Bezrefleksyjnie stosuje metodę','Świadomie stosuje metodę','Efektywnie stosuje metodę','Rozwija metodę'],
+      items:[
+        ['Stosuje nieharcerskie (nienaturalne) formy pracy.','Nie pracuje systemem zastępowym.','Nie stosuje systemu sprawności lub przyznaje je uznaniowo.','Nie używa systemu stopni lub nadaje je uznaniowo.','Nie pracuje z przybocznymi w celu przygotowania następcy.','Tworzy nieprzemyślane plany pracy i z nich nie korzysta. Działa akcyjnie i na ostatnią chwilę.','Nie zna rodziców swoich harcerzy.','Nie współpracuje z podmiotami otoczenia zewnętrznego drużyny.'],
+        ['Bezrefleksyjnie powiela podpatrzone formy pracy.','Usiłuje wpływać na pracę zastępów za pomocą poleceń i rozkazów.','Pracuje z Radą Drużyny, ale traktuje ją fasadowo.','Próbuje stosować system sprawności, ale nie potrafi zainspirować harcerzy do częstego ich zdobywania.','Stosuje system stopni, koncentrując się na wymaganiach ogólnych.','Nie dostosowuje prób indywidualnych do potrzeb i możliwości rozwojowych harcerzy.','Przydziela przybocznym tylko proste zadania organizacyjne, bez przemyślanego planu ich rozwoju instruktorskiego.','Tworzy akceptowalne plany pracy, ale bez udziału przybocznych i zastępowych.','Utrzymuje sporadyczne kontakty z rodzicami harcerzy w celach wyłącznie informacyjnych (zebrania, karty itp.).','Próbuje współpracować ze szkołą/parafią/samorządem, na terenie którego działa drużyna, ale bez większych efektów.'],
+        ['Poprawnie stosuje typowe formy pracy harcerskiej. Prowadzone przez niego zajęcia są atrakcyjne i pożyteczne.','Efektywnie inspiruje zastępowych do organizowania atrakcyjnych i pożytecznych zbiórek.','Kieruje drużyną przy pomocy Rady Drużyny, nadając jej możliwie szerokie uprawnienia.','Efektywnie podtrzymuje modę na zdobywanie sprawności i tworzy odpowiednie warunki do ich zdobywania.','Poprawnie stosuje system stopni, dba o spełnianie wymagań i dostosowuje próby indywidualne do potrzeb i możliwości rozwojowych harcerzy.','Prowadzi planową pracę z przybocznymi, dzieli się z nimi zadaniami mającymi walor kształcenia instruktorskiego.','Tworzy przemyślane i użyteczne programy i harmonogramy pracy. Wyznacza adekwatne do sytuacji środowiska cele i dobiera odpowiednie środki do ich realizacji.','Angażuje członków kadry/Rady Drużyny w tworzenie planów, ich realizację i ewaluację. Deleguje zadania i pilnuje ich wykonania.','Utrzymuje osobisty kontakt z większością rodziców harcerzy, przekonuje ich do korzyści wychowawczych płynących z udziału syna w życiu drużyny i zachęca do współpracy.','Efektywnie włącza drużynę w wartościowe działania inicjowane w zewnętrznym środowisku lokalnym.'],
+        ['Rozumie sens i właściwie stosuje zasady i środki harcerskiego systemu wychowania.','Tworzy właściwą atmosferę wychowawczą w drużynie.','Trafnie dobiera formy pracy.','W razie potrzeby potrafi poprowadzić zajęcia zuchowe lub wędrownicze.','Efektywnie kształci zastępowych.','Tworzy w drużynie efektywny system współzawodnictwa i współdziałania zastępów, za pomocą którego skutecznie inspiruje ich pracę.','Poprzez pracę z RD tworzy warunki do rozwoju postaw obywatelskich i doświadczenia samorządności.','Inspiruje i motywuje harcerzy do zdobywania sprawności rozwijających przydatne i wartościowe zainteresowania.','Umiejętnie dostosowuje działanie systemu stopni do potrzeb drużyny.','Poprzez próby na stopnie inspiruje harcerzy do coraz większej samodzielności w pracy nad sobą.','Skutecznie przeprowadza próby instruktorskie swoich przybocznych.','Tworzy i realizuje długofalowe plany rozwoju drużyny i środowiska harcerskiego.','Konsultuje zamierzenia wychowawcze z rodzicami harcerzy i sprawia, że traktują go jak partnera w wychowaniu synów.','Bierze aktywny udział w życiu społeczności lokalnej, współtworząc odpowiednie warunki do pożytecznego udziału harcerzy we wspólnych zamierzeniach.'],
+        ['Poprawnie posługuje się metodyką zuchową i wędrowniczą.','Twórczo korzysta z istniejącego dorobku metodycznego harcerstwa oraz z doświadczeń poprzedników.','Tworzy i upowszechnia nowe rozwiązania metodyczne.','Tworzy adekwatne do potrzeb rozwiązania programowe.','Aktywnie wspiera dobrą radą i pomocą mniej doświadczonych instruktorów.','Skutecznie prowadzi próby instruktorskie, dążąc do tego, aby „uczeń przerósł mistrza”.','Planuje strategicznie i skutecznie wspiera rozwój środowisk harcerskich, tworząc efektywne rozwiązania systemowe.','Animuje ruch przyjaciół wspierających pracę środowiska harcerskiego.','Tworzy przyjazne środowisko dla harcerstwa i dobre warunki współpracy z zewnętrznymi partnerami społecznymi.']
+      ],
+      aspectOf:[
+        [0,1,2,3,4,5,6,7],
+        [0,1,1,2,3,3,4,5,6,7],
+        [0,1,1,2,3,4,5,5,6,7],
+        [0,0,0,0,1,1,1,2,3,3,4,5,6,7],
+        [0,0,0,0,4,4,5,6,7]
+      ]
+    },
+    zuchowa:{
+      label:'metodyka zuchowa',
+      aspects:['rozumienie harcerskiego systemu wychowania i specyfiki poszczególnych metodyk','stosowanie systemu Pryzmat, gwiazdek i sprawności','rozwijanie kompetencji następców i prowadzenie prób instruktorskich','planowanie pracy','współpraca z rodzicami','współpraca z partnerami zewnętrznymi'],
+      badges:['Osoba pobieżnie przygotowana do pracy z zuchami','Początkujący wódz gromady','Doświadczony wódz gromady / początkujący drużynowy','Świadomy drużynowy / generał zuchów','Twórczy instruktor'],
+      items:[
+        ['Stosuje niezuchowe (nienaturalne) formy pracy.','Nie stosuje w gromadzie podziału na szóstki.','Nie tworzy warunków do zdobywania przez zuchy sprawności.','Nie organizuje zdobywania gwiazdek zuchowych.','Nie umożliwia przybocznym ich rozwoju harcerskiego.','Wykorzystuje przybocznych tylko jako pomocników w przeprowadzeniu zbiórki.','Tworzy nieprzemyślane plany pracy i z nich nie korzysta. Zbiórki przygotowuje na ostatnią chwilę.','Nie zna rodziców swoich zuchów.','Nie współpracuje z podmiotami otoczenia zewnętrznego gromady.'],
+        ['Bezrefleksyjnie powiela podpatrzone formy pracy.','Na zbiórkach stosuje podział na szóstki adekwatnie do zajęć.','Przyznaje sprawności, ale nie przeprowadza cykli zabawowych.','Przyznaje gwiazdki zuchowe uznaniowo.','Prowadzi pracę wędrowniczą z przybocznymi jedynie sporadycznie.','Przydziela przybocznym tylko proste zadania organizacyjne, bez przemyślanego planu ich rozwoju instruktorskiego.','Tworzy akceptowalne plany pracy, ale bez udziału przybocznych.','Utrzymuje kontakt z rodzicami zuchów w celach wyłącznie informacyjnych (zebrania, karty itp.).','Próbuje współpracować ze szkołą/parafią/samorządem, na terenie którego działa gromada, ale bez większych efektów.'],
+        ['Poprawnie stosuje typowe zuchowe formy pracy. Prowadzone przez niego zajęcia są atrakcyjne i pożyteczne.','Tworzy ciekawe cykle zabawowe prowadzące do zdobywania gwiazdek i sprawności.','Poprawnie stosuje system Pryzmat, dbając o indywidualny rozwój zuchów.','Prowadzi pracę metodą wędrowniczą z przybocznymi, ale nie jest w tym samodzielny – potrzebuje wsparcia doświadczonego instruktora.','Dzieli się z przybocznymi zadaniami z zakresu planowania pracy i prowadzenia gromady, tym samym przygotowując ich do roli następców.','Tworzy przemyślane i użyteczne plany pracy. Wyznacza adekwatne do sytuacji gromady cele i dobiera odpowiednie środki do ich realizacji.','Utrzymuje kontakt z większością rodziców zuchów, przekonuje ich do korzyści wychowawczych płynących z udziału syna w życiu gromady i zachęca do współpracy.','Efektywnie włącza gromadę w wartościowe działania inicjowane w zewnętrznym środowisku lokalnym.'],
+        ['Rozumie sens i właściwie stosuje zasady i środki harcerskiego systemu wychowania.','Tworzy właściwą atmosferę wychowawczą w gromadzie.','Trafnie dobiera formy pracy.','W razie potrzeby potrafi poprowadzić zajęcia harcerskie lub wędrownicze.','Inspiruje i motywuje zuchy do indywidualnego zdobywania sprawności, podsycając ich ciekawość świata.','Umiejętnie konfiguruje działanie systemu Pryzmat, dostosowując go do potrzeb gromady.','W próbach na gwiazdki stosuje zarówno zadania do realizacji całą gromadą, jak i zadania indywidualne, dopasowane do potrzeb konkretnych zuchów.','Prowadzi samodzielną pracę wędrowniczą z przybocznymi, dostosowując program do ich indywidualnych potrzeb i możliwości rozwojowych.','Skutecznie przeprowadza próby instruktorskie swoich przybocznych.','Tworzy i realizuje długofalowe plany rozwoju gromady i środowiska harcerskiego.','Konsultuje zamierzenia wychowawcze z rodzicami zuchów i sprawia, że traktują go jak partnera w wychowaniu synów.','Bierze aktywny udział w życiu społeczności lokalnej, współtworząc odpowiednie warunki do pożytecznego udziału przybocznych we wspólnych zamierzeniach.'],
+        ['Poprawnie posługuje się metodyką harcerską i wędrowniczą.','Twórczo korzysta z istniejącego dorobku metodycznego harcerstwa oraz z doświadczeń poprzedników.','Tworzy i upowszechnia nowe rozwiązania metodyczne.','Tworzy adekwatne do potrzeb rozwiązania programowe.','Aktywnie wspiera dobrą radą i pomocą mniej doświadczonych instruktorów.','Skutecznie prowadzi próby instruktorskie, dążąc do tego, aby „uczeń przerósł mistrza”.','Planuje strategicznie i skutecznie wspiera rozwój środowisk harcerskich, tworząc efektywne rozwiązania systemowe.','Animuje ruch przyjaciół wspierających pracę środowiska harcerskiego.','Tworzy przyjazne środowisko dla harcerstwa i dobre warunki współpracy z zewnętrznymi partnerami społecznymi.']
+      ],
+      aspectOf:[
+        [0,0,1,1,2,2,3,4,5],
+        [0,0,1,1,2,2,3,4,5],
+        [0,1,1,2,2,3,4,5],
+        [0,0,0,0,1,1,1,2,2,3,4,5],
+        [0,0,0,0,2,2,3,4,5]
+      ]
+    },
+    wedrownicza:{
+      label:'metodyka wędrownicza',
+      aspects:['rozumienie harcerskiego systemu wychowania i specyfiki poszczególnych metodyk','stosowanie systemu patrolowego/sekcyjnego/projektowego i wspieranie samorządu wędrowniczego','organizowanie pracy specjalizacyjnej','wspieranie służby','stosowanie systemu stopni','rozwijanie kompetencji instruktorskich wędrowników i prowadzenie prób','planowanie pracy','współpraca z rodzicami','współpraca z partnerami zewnętrznymi'],
+      badges:['Nie stosuje metody','Bezrefleksyjnie stosuje metodę','Świadomie stosuje metodę','Efektywnie stosuje metodę','Rozwija metodę'],
+      items:[
+        ['Wykorzystuje formy pracy nieadekwatne do wieku wędrowników.','Nie pracuje systemem małych grup (patrolowym / sekcyjnym / projektowym).','Nie tworzy warunków do pogłębiania przez wędrowników swoich zainteresowań i do pracy specjalnościowej.','Nie zachęca wędrowników do pełnienia służby społecznej.','Nie zapewnia wędrownikom możliwości zdobywania stopni.','Nie pracuje z przybocznymi w celu kształcenia kolejnych instruktorów.','Tworzy nieprzemyślane plany pracy i z nich nie korzysta. Działa akcyjnie i na ostatnią chwilę.','Nie zna rodziców swoich wędrowników.','Nie współpracuje z podmiotami otoczenia zewnętrznego drużyny.'],
+        ['Proponuje działania, które mijają się z oczekiwaniami większej części wędrowników lub są mało ambitne.','Stosuje wybrany system małych grup, ale nie pracuje z patrolowymi / szefami sekcji lub zespołów.','Próbuje rozwijać zainteresowania wędrowników, jednak robi to, stosując nieadekwatne narzędzia, takie jak sprawności.','Organizuje służbę dla całej drużyny, ale nie motywuje wędrowników do poszukiwania własnych pól służby.','Umożliwia wędrownikom zdobywanie stopni, ale nie wspiera ich w pracy nad sobą.','Przydziela przybocznym tylko proste zadania organizacyjne, bez przemyślanego planu ich rozwoju instruktorskiego.','Tworzy akceptowalne plany pracy, ale bez udziału przybocznych i innych członków drużyny.','Utrzymuje sporadyczne kontakty z rodzicami wędrowników w celach wyłącznie informacyjnych (zebrania, karty itp.).','Próbuje współpracować ze szkołą/parafią/samorządem, na terenie którego działa drużyna, ale bez większych efektów.'],
+        ['Jego propozycje programowe odpowiadają wędrownikom, są nie tylko atrakcyjne, ale i pożyteczne wychowawczo.','Wspiera i motywuje szefów zespołów do bardziej efektywnej działalności ich grup.','Kieruje drużyną przy pomocy wybranej formy samorządu wędrowniczego, nadając mu możliwie szerokie uprawnienia.','Tworzy każdemu wędrownikowi dogodne warunki do pracy specjalnościowej w wybranej dziedzinie.','Efektywnie motywuje wędrowników do indywidualnej służby na wybranym polu.','Efektywnie wspiera wędrowników w pracy nad sobą i w zdobywaniu stopni.','Prowadzi planową pracę z przybocznymi, dzieli się z nimi zadaniami mającymi walor kształcenia instruktorskiego.','Tworzy wraz z całą drużyną ambitne, przemyślane i użyteczne programy i harmonogramy pracy. Wyznacza adekwatne do sytuacji środowiska cele i dobiera odpowiednie środki do ich realizacji.','Deleguje zadania i pilnuje ich wykonania.','Utrzymuje osobisty kontakt z większością rodziców wędrowników, przekonuje ich do korzyści wychowawczych płynących z udziału syna w życiu drużyny i zachęca do współpracy.','Efektywnie włącza drużynę w wartościowe działania inicjowane w zewnętrznym środowisku lokalnym.'],
+        ['Rozumie sens i właściwie stosuje zasady i środki harcerskiego systemu wychowania.','Tworzy właściwą atmosferę wychowawczą w drużynie.','W razie potrzeby potrafi poprowadzić zajęcia zuchowe lub harcerskie.','Tworzy w drużynie efektywny system współdziałania patroli / sekcji / zespołów.','Poprzez umiejętne wykorzystanie samorządu wędrowniczego tworzy warunki do rozwoju postaw obywatelskich.','Skutecznie wspiera wędrowników w zdobywaniu profesjonalnych uprawnień w wybranych przez nich dziedzinach.','Organizuje pracę drużyny tak, aby każdy wędrownik miał indywidualne pole służby.','Doprowadza wędrowników do zdobycia stopnia HR i do pełnej samodzielności w pracy nad sobą.','Skutecznie przeprowadza próby instruktorskie swoich przybocznych.','Tworzy i realizuje długofalowe plany rozwoju drużyny i środowiska harcerskiego.','Konsultuje zamierzenia wychowawcze z rodzicami wędrowników i sprawia, że traktują go jak partnera w wychowaniu synów.','Bierze aktywny udział w życiu społeczności lokalnej, współtworząc odpowiednie warunki do pożytecznego udziału wędrowników we wspólnych zamierzeniach.'],
+        ['Poprawnie posługuje się metodyką zuchową i harcerską.','Twórczo korzysta z istniejącego dorobku metodycznego harcerstwa oraz z doświadczeń poprzedników.','Tworzy i upowszechnia nowe rozwiązania metodyczne.','Tworzy adekwatne do potrzeb rozwiązania programowe.','Aktywnie wspiera dobrą radą i pomocą mniej doświadczonych instruktorów.','Skutecznie prowadzi próby instruktorskie, dążąc do tego, aby „uczeń przerósł mistrza”.','Planuje strategicznie i skutecznie wspiera rozwój środowisk harcerskich, tworząc efektywne rozwiązania systemowe.','Animuje ruch przyjaciół wspierających pracę środowiska harcerskiego.','Tworzy przyjazne środowisko dla harcerstwa i dobre warunki współpracy z zewnętrznymi partnerami społecznymi.']
+      ],
+      aspectOf:[
+        [0,1,2,3,4,5,6,7,8],
+        [0,1,2,3,4,5,6,7,8],
+        [0,1,1,2,3,4,5,6,6,7,8],
+        [0,0,0,1,1,2,3,4,5,6,7,8],
+        [0,0,0,0,5,5,6,7,8]
+      ]
+    }
+  }
+}
+};
+
+function getComp(key){
+  if(key==='met'){
+    const v=COMP.met.variants[state.methodTrack]||COMP.met.variants.harcerska;
+    return {key:'met', name:'Stosowanie Metody ('+v.label+')', icon:COMP.met.icon, accent:COMP.met.accent,
+            aspects:v.aspects, badges:v.badges, items:v.items, aspectOf:v.aspectOf};
+  }
+  return COMP[key];
+}
+
+const WIZARD_ORDER=['sam','wsp','kom','met','prz','ksz','zar','kwa'];
+const RADAR_ORDER=['kom','sam','prz','zar','kwa','ksz','wsp','met'];
+const RADAR_ORDER_5K=['kom','sam','prz','met','wsp'];
+
+const FUNCTIONS=[
+  {name:'Przyboczny', req:{sam:5,wsp:5,kom:5,prz:3,met:3}},
+  {name:'Kwatermistrz drużyny', req:{sam:5,wsp:5,kom:5,prz:3,met:3,kwa:5}},
+  {name:'Wódz gromady', req:{sam:5,wsp:5,kom:5,prz:3,met:3}},
+  {name:'Drużynowy - instruktor', req:{sam:7,wsp:7,kom:7,prz:5,met:5,kwa:5}},
+  {name:'Kwatermistrz obozu', req:{sam:7,wsp:7,kom:5,prz:3,met:3,kwa:7}},
+  {name:'Komendant obozu', req:{sam:9,wsp:9,kom:7,prz:5,met:7,kwa:7}},
+  {name:'Generał zuchowy', req:{sam:7,wsp:7,kom:7,prz:7,met:7,kwa:5}},
+  {name:'Hufcowy', req:{sam:9,wsp:9,kom:7,prz:7,met:7,zar:5,kwa:5}},
+  {name:'Prowadzący zajęcia kursowe', req:{sam:7,wsp:7,kom:7,prz:5,met:7,ksz:5}},
+  {name:'Komendant kursu instr.', req:{sam:9,wsp:9,kom:9,prz:7,met:9,ksz:7,zar:5,kwa:7}},
+  {name:'Szef szkoły instr.', req:{sam:9,wsp:9,kom:9,prz:9,met:9,ksz:9,zar:5,kwa:7}},
+  {name:'Komendant chorągwi', req:{sam:9,wsp:9,kom:9,prz:9,met:9,zar:7,kwa:7}},
+  {name:'Naczelnik', req:{sam:9,wsp:9,kom:9,prz:9,met:9,ksz:9,zar:9,kwa:9}},
+  {name:'Przewodniczący obwodu', req:{sam:9,wsp:9,kom:7,prz:7,met:5,zar:7,kwa:9}},
+  {name:'Przewodniczący okręgu', req:{sam:9,wsp:9,kom:9,prz:9,met:7,zar:7,kwa:9}}
+];
+
+const RANKS_HARC=['Młodzik','Wywiadowca','Ćwik','HO','HR','— brak / nie dotyczy —'];
+const RANKS_INSTR=['pwd.','phm.','hm.','— brak / nie dotyczy —'];
+
+/* =========================================================
+   STAN / STATE
+   ========================================================= */
+const state={
+  screen:'intro',
+  idx:0,
+  rankHarcCurrent:null, rankHarcTarget:null,
+  rankInstrCurrent:null, rankInstrTarget:null,
+  funcCurrent:null, funcTarget:null,
+  methodTrack:'harcerska',
+  radarMode:'8k',
+  answers:{} // answers.sam[level] = Set(itemIdx)
+};
+
+function ensureAns(key){
+  if(!state.answers[key]) state.answers[key]={};
+  return state.answers[key];
+}
+
+/* Zapasowe, proporcjonalne przybliżenie — używane tylko gdyby jakiejś kompetencji
+   zabrakło realnej mapy aspectOf (nie powinno się zdarzyć, ale to bezpiecznik). */
+function aspectIndexFor(nAspects, N, j){
+  if(N<=1) return 0;
+  return Math.min(nAspects-1, Math.floor(j*nAspects/N));
+}
+
+/* Metoda pełna z instrukcji: dla każdego aspektu (wiersza) ustal najwyższy zaznaczony
+   poziom ("granica obszaru"), a poziom całej kompetencji to poziom, który wśród
+   aspektów wychodzi najczęściej (dominanta), z remisem na korzyść wyższego poziomu
+   ("licząc od prawej strony"). Niezaznaczone stwierdzenia poniżej i na granicy tego
+   poziomu to konkretne cele rozwoju. Przypisanie stwierdzeń do aspektów (aspectOf)
+   zostało odczytane bezpośrednio z kolorów oryginalnych map w PDF-ie Atlasu. */
+function analyzeCompetency(key){
+  const comp=getComp(key);
+  const nAspects=comp.aspects.length;
+  const ans=state.answers[key];
+  const aspectMax=new Array(nAspects).fill(null);
+  const allItems=[];
+  comp.items.forEach((arr,levelIdx)=>{
+    const lvl=LEVEL_VALUES[levelIdx];
+    const N=arr.length;
+    const checkedSet=(ans&&ans[lvl])||new Set();
+    const rowMap=comp.aspectOf && comp.aspectOf[levelIdx];
+    arr.forEach((text,j)=>{
+      const aspect=(rowMap && rowMap[j]!=null) ? rowMap[j] : aspectIndexFor(nAspects,N,j);
+      const checked=checkedSet.has(j);
+      if(checked) aspectMax[aspect]= aspectMax[aspect]==null ? lvl : Math.max(aspectMax[aspect], lvl);
+      allItems.push({lvl,j,text,aspect,checked});
+    });
+  });
+  const countsByLevel={1:0,3:0,5:0,7:0,9:0};
+  let anyAssessed=false;
+  aspectMax.forEach(v=>{ if(v!=null){ countsByLevel[v]++; anyAssessed=true; } });
+  if(!anyAssessed) return {level:null, aspectMax, allItems, priorityGoals:[], nextGoals:[]};
+  let level=null, bestCount=-1;
+  [...LEVEL_VALUES].reverse().forEach(lv=>{ if(countsByLevel[lv]>bestCount){ bestCount=countsByLevel[lv]; level=lv; } });
+  const nextIdx=LEVEL_VALUES.indexOf(level)+1;
+  const nextLevel = nextIdx<LEVEL_VALUES.length ? LEVEL_VALUES[nextIdx] : null;
+  const priorityGoals=[], nextGoals=[];
+  allItems.forEach(it=>{
+    if(it.checked) return;
+    if(it.lvl<level) priorityGoals.push(it);
+    else if(it.lvl===level || it.lvl===nextLevel) nextGoals.push(it);
+  });
+  return {level, aspectMax, allItems, priorityGoals, nextGoals};
+}
+
+function computeScore(key){ return analyzeCompetency(key).level; }
+
+function nearestLevelIdx(score){
+  const exact=LEVEL_VALUES.indexOf(score);
+  if(exact>=0) return exact;
+  let best=0, bd=99;
+  LEVEL_VALUES.forEach((v,i)=>{ const d=Math.abs(v-score); if(d<bd){bd=d; best=i;} });
+  return best;
+}
+
+function levelColorFor(score){
+  if(score==null) return '#B9AD90';
+  return LEVEL_COLORS[nearestLevelIdx(score)].replace('var(--lvl1)','#A8432B').replace('var(--lvl3)','#C17A2E').replace('var(--lvl5)','#96872F').replace('var(--lvl7)','#3F7860').replace('var(--lvl9)','#9C7412');
+}
+/* direct hex map to avoid CSS var() inside SVG fill attrs */
+const LEVEL_HEX=['#A8432B','#C17A2E','#96872F','#3F7860','#9C7412'];
+const ASPECT_COLORS=['#8B4A3B','#3B6B8B','#5E8B3B','#8B6B2E','#6B4A8B','#2E6B6B','#8B3B6B','#5B6B2E','#3B4A8B'];
+function hexForScore(score){ if(score==null) return '#B9AD90'; return LEVEL_HEX[nearestLevelIdx(score)]; }
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+const app=document.getElementById('app');
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+function headerHtml(){
+  return `<div class="top-header no-print">
+    <div class="compass-mark"></div>
+    <div>
+      <div class="top-title">ATLAS KOMPETENCJI</div>
+      <div class="top-sub">interaktywna samoocena kompetencji instruktorskich</div>
+    </div>
+  </div>`;
+}
+
+function stepperHtml(){
+  let dots='';
+  WIZARD_ORDER.forEach((k,i)=>{
+    const comp=getComp(k);
+    const scored=computeScore(k)!==null || (state.answers[k]&&Object.keys(state.answers[k]).length>0 && computeScore(k)===null);
+    const has=computeScore(k)!==null;
+    let cls='dot';
+    if(state.screen==='assess' && state.idx===i) cls+=' current';
+    else if(has) cls+=' done';
+    dots+=`<button class="${cls}" data-action="jump" data-idx="${i}" title="${esc(comp.name)}">${comp.icon}</button>`;
+    if(i<WIZARD_ORDER.length-1) dots+=`<div class="step-line"></div>`;
+  });
+  return `<div class="stepper no-print">${dots}<span class="results-flag">
+    <button class="btn-text" data-action="goresults">Zobacz wyniki →</button></span></div>`;
+}
+
+function pillRow(qkey, options, current){
+  return `<div class="pillrow">` + options.map(o=>{
+    const v = (typeof o==='object')?o.v:o;
+    const label=(typeof o==='object')?o.l:o;
+    const active = current===v ? ' active':'';
+    return `<button class="pill${active}" data-q="${qkey}" data-v="${esc(v)}">${esc(label)}</button>`;
+  }).join('') + `</div>`;
+}
+
+function renderIntro(){
+  const funcOptions = FUNCTIONS.map(f=>f.name).concat(['— nie dotyczy / jeszcze nie wiem —']);
+  app.innerHTML = `
+    ${headerHtml()}
+    <div class="card intro-hero">
+      <div class="eyebrow">Zanim wyruszysz</div>
+      <h1>Sprawdź, na jakiej jesteś mapie</h1>
+      <p>W ośmiu obszarach kompetencji zaznaczysz stwierdzenia, które Cię opisują. Na koniec zobaczysz swoją mapę kompetencji (radar) oraz sprawdzisz, do jakich funkcji już dorosłeś, a do jakich jeszcze droga przed Tobą.</p>
+      <p class="small-muted">3 mapy to kompetencje harcerskie (Samodzielność, Współpraca, Komunikacja), 2 to obowiązkowe kompetencje instruktorskie (Przywództwo, Stosowanie metody), a 3 to fakultatywne kompetencje funkcyjne (Kształcenie, Zarządzanie, Kwatermistrzostwo). Zaznaczaj tylko to, co faktycznie u siebie widzisz — reszta stanie się Twoimi celami rozwoju, nie czymś do udawania.</p>
+    </div>
+    <div class="card">
+      <div class="qblock">
+        <div class="qlabel">Stopień harcerski</div>
+        <div class="qhint">Posiadany:</div>
+        ${pillRow('rankHarcCurrent', RANKS_HARC, state.rankHarcCurrent)}
+        <div class="qhint" style="margin-top:10px">Do którego dążysz <i>(opcjonalnie)</i>:</div>
+        ${pillRow('rankHarcTarget', RANKS_HARC, state.rankHarcTarget)}
+      </div>
+      <div class="qblock">
+        <div class="qlabel">Stopień instruktorski</div>
+        <div class="qhint">Posiadany:</div>
+        ${pillRow('rankInstrCurrent', RANKS_INSTR, state.rankInstrCurrent)}
+        <div class="qhint" style="margin-top:10px">Do którego dążysz <i>(opcjonalnie)</i>:</div>
+        ${pillRow('rankInstrTarget', RANKS_INSTR, state.rankInstrTarget)}
+      </div>
+      <div class="qblock">
+        <div class="qlabel">Jaką funkcję pełnisz obecnie?</div>
+        ${pillRow('funcCurrent', funcOptions, state.funcCurrent)}
+      </div>
+      <div class="qblock">
+        <div class="qlabel">O jaką funkcję się starasz / do jakiej dążysz?</div>
+        <div class="qhint">To dopasujemy do Twoich wyników na końcu.</div>
+        ${pillRow('funcTarget', funcOptions, state.funcTarget)}
+      </div>
+      <div class="qblock">
+        <div class="qlabel">Jaką metodyką zajmujesz się na co dzień?</div>
+        <div class="qhint">Zdecyduje, którą wersję „Stosowania Metody” zobaczysz.</div>
+        ${pillRow('methodTrack', [{v:'zuchowa',l:'Zuchowa'},{v:'harcerska',l:'Harcerska'},{v:'wedrownicza',l:'Wędrownicza'}], state.methodTrack)}
+      </div>
+      <div class="navrow">
+        <div></div>
+        <button class="btn btn-primary" data-action="start">Rozpocznij ocenę →</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderAssess(){
+  const key=WIZARD_ORDER[state.idx];
+  const comp=getComp(key);
+  const ans=ensureAns(key);
+  const nAspects=comp.aspects.length;
+
+  // Rozłóż itemy każdego poziomu na wiersze aspektów — używając prawdziwego
+  // przypisania odczytanego z kolorów PDF-a (ta sama funkcja co w scoringu,
+  // więc to, co widać, jest tym samym, co jest liczone).
+  const cellsByLevel = comp.items.map((arr,levelIdx)=>{
+    const N=arr.length;
+    const rowMap=comp.aspectOf && comp.aspectOf[levelIdx];
+    const rows=Array.from({length:nAspects},()=>[]);
+    arr.forEach((text,j)=>{
+      const a=(rowMap && rowMap[j]!=null) ? rowMap[j] : aspectIndexFor(nAspects,N,j);
+      rows[a].push({j,text});
+    });
+    return rows;
+  });
+
+  let theadHtml = `<tr><th class="asp-corner"></th>` + LEVEL_VALUES.map((lvl,i)=>{
+    const set=ans[lvl]||new Set();
+    return `<th class="level-head" style="background:${LEVEL_HEX[i]}">${lvl} · ${LEVEL_NAMES[i]}<span class="level-count" data-count="${lvl}">${set.size}/${comp.items[i].length} zaznaczone</span></th>`;
+  }).join('') + `</tr>`;
+
+  let tbodyHtml='';
+  for(let a=0;a<nAspects;a++){
+    const color=ASPECT_COLORS[a%ASPECT_COLORS.length];
+    tbodyHtml+=`<tr>`;
+    tbodyHtml+=`<th class="asp-th" style="border-left:4px solid ${color}"><span class="asp-dot" style="background:${color}"></span>${esc(comp.aspects[a])}</th>`;
+    for(let levelIdx=0; levelIdx<5; levelIdx++){
+      const lvl=LEVEL_VALUES[levelIdx];
+      const checkedSet=ans[lvl]||new Set();
+      const cellItems=cellsByLevel[levelIdx][a];
+      const cellHtml = cellItems.length ? cellItems.map(it=>{
+        const checked=checkedSet.has(it.j)?'checked':'';
+        return `<label class="chk" style="border-left-color:${color}"><input type="checkbox" data-level="${lvl}" data-j="${it.j}" ${checked}><span>${esc(it.text)}</span></label>`;
+      }).join('') : `<span class="asp-empty">—</span>`;
+      tbodyHtml+=`<td class="asp-td">${cellHtml}</td>`;
+    }
+    tbodyHtml+=`</tr>`;
+  }
+
+  const score=computeScore(key);
+  const scoreTxt = score==null? '—' : String(score);
+  const badgeTxt = score==null? 'Zaznacz przynajmniej jedno stwierdzenie' : comp.badges[nearestLevelIdx(score)];
+
+  app.innerHTML = `
+    ${headerHtml()}
+    ${stepperHtml()}
+    <div class="card">
+      <div class="comp-head">
+        <div class="comp-icon">${comp.icon}</div>
+        <div>
+          <h2>${esc(comp.name)}</h2>
+          <p class="comp-aspects">${comp.aspects.map((a,i)=>`<span style="color:${ASPECT_COLORS[i%ASPECT_COLORS.length]}">●</span> ${esc(a)}`).join('  ')}</p>
+        </div>
+        <div class="live-preview">
+          <div class="live-score mono" id="liveScore">${scoreTxt}</div>
+          <div class="live-badge" id="liveBadge">${esc(badgeTxt)}</div>
+        </div>
+      </div>
+      <div class="comp-instruction">Mapę czytaj poziomo — wierszami (aspektami, oznaczonymi kolorem). Zaznacz tylko to, co faktycznie u siebie obserwujesz — niezaznaczone, wcześniejsze zachowania w danym wierszu staną się Twoimi celami rozwoju w raporcie.</div>
+      <div class="grid-levels-wrap"><table class="aspect-table"><thead>${theadHtml}</thead><tbody>${tbodyHtml}</tbody></table></div>
+      <div class="navrow">
+        <div class="navrow-left">
+          <button class="btn btn-ghost" data-action="back" ${state.idx===0?'disabled':''}>← Wstecz</button>
+          <button class="btn-text" data-action="skip">Pomiń tę kompetencję →</button>
+        </div>
+        <div class="navrow-right">
+          <button class="btn btn-primary" data-action="next">${state.idx===WIZARD_ORDER.length-1?'Zobacz wyniki →':'Dalej →'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function updateLivePreview(){
+  const key=WIZARD_ORDER[state.idx];
+  const comp=getComp(key);
+  const score=computeScore(key);
+  document.getElementById('liveScore').textContent = score==null?'—':String(score);
+  document.getElementById('liveBadge').textContent = score==null? 'Zaznacz przynajmniej jedno stwierdzenie' : comp.badges[nearestLevelIdx(score)];
+  comp.items.forEach((arr,i)=>{
+    const lvl=LEVEL_VALUES[i];
+    const set=(state.answers[key]&&state.answers[key][lvl])||new Set();
+    const el=document.querySelector('[data-count="'+lvl+'"]');
+    if(el) el.textContent = set.size+'/'+arr.length+' zaznaczone';
+  });
+}
+
+/* ---------------- radar ---------------- */
+function buildRadar(scores, compareReq, order){
+  order = order || RADAR_ORDER;
+  const N=order.length, cx=360, cy=300, maxR=185;
+  function pt(r,i){ const a=(i*360/N)*Math.PI/180; return [cx+r*Math.sin(a), cy-r*Math.cos(a)]; }
+  function ringPts(r){ return order.map((_,i)=>pt(r,i).join(',')).join(' '); }
+  // Kilka nazw kompetencji jest zbyt długich, by zmieścić się w jednej linii przy
+  // większej czcionce — dzielimy je ręcznie na dwa krótsze wiersze.
+  const LABEL_WRAP={
+    'Samodzielność i Rzetelność':['Samodzielność','i Rzetelność'],
+    'Współpraca i Odpowiedzialność':['Współpraca i','Odpowiedzialność'],
+    'Stosowanie Metody':['Stosowanie','Metody']
+  };
+  function wrapLabel(name){ return LABEL_WRAP[name] || [name]; }
+  let svg=`<svg viewBox="0 0 720 620" width="720" height="620" style="max-width:100%">`;
+  // rings
+  [1,3,5,7,9].forEach(v=>{
+    const r=(v-1)/8*maxR;
+    svg+=`<polygon points="${ringPts(r)}" fill="none" stroke="#C9BB9E" stroke-width="1"/>`;
+  });
+  // ring value labels along top axis (index 0)
+  [1,3,5,7,9].forEach(v=>{
+    const r=(v-1)/8*maxR;
+    const [x,y]=pt(r,0);
+    svg+=`<text x="${x+4}" y="${y-3}" font-size="9" fill="#8a7c66" font-family="JetBrains Mono, monospace">${v}</text>`;
+  });
+  // axis lines + labels
+  order.forEach((k,i)=>{
+    const comp=getComp(k);
+    const [x,y]=pt(maxR,i);
+    svg+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#C9BB9E" stroke-width="1"/>`;
+    const [lx,ly]=pt(maxR+38,i);
+    let anchor='middle';
+    if(lx<cx-10) anchor='end'; else if(lx>cx+10) anchor='start';
+    svg+=`<text x="${lx}" y="${ly-4}" font-size="19" text-anchor="${anchor}" font-family="Inter, sans-serif">${comp.icon}</text>`;
+    const lines=wrapLabel(comp.name.split(' (')[0]);
+    svg+=`<text x="${lx}" y="${ly+15}" font-size="13" text-anchor="${anchor}" fill="#3B2E22" font-family="Inter, sans-serif" font-weight="700">`;
+    lines.forEach((line,li)=>{ svg+=`<tspan x="${lx}" dy="${li===0?0:15}">${esc(line)}</tspan>`; });
+    svg+=`</text>`;
+  });
+  // compare polygon (function requirement)
+  if(compareReq){
+    const cpts=order.map((k,i)=>{
+      const req=compareReq[k];
+      const v=req||1;
+      const r=(v-1)/8*maxR;
+      return pt(r,i).join(',');
+    }).join(' ');
+    svg+=`<polygon points="${cpts}" fill="none" stroke="#A97B33" stroke-width="2" stroke-dasharray="6,5"/>`;
+  }
+  // data polygon
+  const dpts=order.map((k,i)=>{
+    const s=scores[k];
+    const v=s==null?1:s;
+    const r=(v-1)/8*maxR;
+    return pt(r,i);
+  });
+  svg+=`<polygon points="${dpts.map(p=>p.join(',')).join(' ')}" fill="rgba(36,70,58,0.28)" stroke="#24463A" stroke-width="2.5"/>`;
+  dpts.forEach(([x,y],i)=>{
+    const k=order[i]; const s=scores[k];
+    svg+=`<circle cx="${x}" cy="${y}" r="4.5" fill="${hexForScore(s)}" stroke="#fff" stroke-width="1.5"/>`;
+  });
+  svg+=`</svg>`;
+  return svg;
+}
+
+function funcStatus(func, scores){
+  const reqKeys=Object.keys(func.req);
+  let met=0, gaps=[];
+  reqKeys.forEach(k=>{
+    const s=scores[k];
+    const req=func.req[k];
+    if(s!=null && s>=req) met++;
+    else gaps.push({k, have:s, need:req});
+  });
+  const ratio=met/reqKeys.length;
+  let status='far';
+  if(ratio===1) status='met';
+  else if(gaps.length<=1 || ratio>=0.7) status='near';
+  return {ratio, gaps, status, reqKeys};
+}
+
+function renderResults(){
+  const analyses={};
+  WIZARD_ORDER.forEach(k=>analyses[k]=analyzeCompetency(k));
+  const scores={};
+  WIZARD_ORDER.forEach(k=>scores[k]=analyses[k].level);
+
+  const targetFunc = FUNCTIONS.find(f=>f.name===state.funcTarget) || null;
+  const order = state.radarMode==='5k' ? RADAR_ORDER_5K : RADAR_ORDER;
+  const radarSvg = buildRadar(scores, targetFunc?targetFunc.req:null, order);
+
+  let scoreCards='';
+  WIZARD_ORDER.forEach((k,i)=>{
+    const comp=getComp(k);
+    const s=scores[k];
+    const an=analyses[k];
+    const hex=hexForScore(s);
+    const pct = s==null?0:((s-1)/8*100);
+    const badge = s==null?'Nieocenione':comp.badges[nearestLevelIdx(s)];
+    const goalsTotal=(an.priorityGoals.length+an.nextGoals.length);
+    const goalsHtml = (s==null || goalsTotal===0) ? '' : `<details class="sc-goals">
+        <summary>Cele rozwoju (${goalsTotal})</summary>
+        ${an.priorityGoals.length?`<div class="goal-group"><b>Uzupełnij braki poniżej Twojego poziomu:</b><ul>${an.priorityGoals.slice(0,10).map(g=>`<li><span class="mono goal-lvl">${g.lvl}</span> ${esc(g.text)}</li>`).join('')}</ul>${an.priorityGoals.length>10?`<div class="small-muted">+ ${an.priorityGoals.length-10} więcej</div>`:''}</div>`:''}
+        ${an.nextGoals.length?`<div class="goal-group"><b>Kolejny krok rozwoju:</b><ul>${an.nextGoals.slice(0,6).map(g=>`<li><span class="mono goal-lvl">${g.lvl}</span> ${esc(g.text)}</li>`).join('')}</ul>${an.nextGoals.length>6?`<div class="small-muted">+ ${an.nextGoals.length-6} więcej</div>`:''}</div>`:''}
+      </details>`;
+    scoreCards+=`<div class="score-card" style="border-left-color:${hex}">
+      <div class="sc-top">
+        <div><span style="font-size:1.2rem;margin-right:6px">${comp.icon}</span><span class="sc-name">${esc(comp.name.split(' (')[0])}</span></div>
+        <div class="sc-num mono" style="color:${hex}">${s==null?'—':s}</div>
+      </div>
+      <div class="sc-badge" style="background:${hex}">${esc(badge)}</div>
+      <div class="sc-bar"><div style="width:${pct}%;background:${hex}"></div></div>
+      ${goalsHtml}
+      <div class="sc-jump" data-action="jump" data-idx="${i}">edytuj odpowiedzi →</div>
+    </div>`;
+  });
+
+  // function matching
+  const withStatus = FUNCTIONS.map(f=>({f, st:funcStatus(f,scores)}));
+  withStatus.sort((a,b)=> b.st.ratio - a.st.ratio);
+  const targetEntry = targetFunc ? withStatus.find(e=>e.f.name===targetFunc.name) : null;
+  const others = withStatus.filter(e=>!targetFunc || e.f.name!==targetFunc.name);
+
+  function reqChipsHtml(f, st){
+    return Object.keys(f.req).map(k=>{
+      const comp=getComp(k);
+      const s=scores[k];
+      const ok = s!=null && s>=f.req[k];
+      return `<span class="req-chip ${ok?'ok':'bad'}">${comp.icon} ${comp.name.split(' (')[0]} ${s==null?'—':s}/${f.req[k]}</span>`;
+    }).join('');
+  }
+  function funcRowHtml(entry, isTarget){
+    const {f,st}=entry;
+    const statusLabel = st.status==='met'?'Spełniasz ✓':(st.status==='near'?'Blisko celu':'Do zdobycia');
+    const statusCls = st.status==='met'?'status-met':(st.status==='near'?'status-near':'status-far');
+    return `<div class="func-row ${isTarget?'target':''} ${st.status==='met'?'met':''}">
+      <div class="func-top">
+        <div class="func-name">${isTarget?'🎯 ':''}${esc(f.name)}</div>
+        <div class="func-status ${statusCls}">${statusLabel}</div>
+      </div>
+      <div class="func-reqs">${reqChipsHtml(f,st)}</div>
+    </div>`;
+  }
+
+  const metFuncs = others.filter(e=>e.st.status==='met');
+  const nearFuncs = others.filter(e=>e.st.status==='near');
+  const restCount = others.length - metFuncs.length - nearFuncs.length;
+
+  app.innerHTML = `
+    ${headerHtml()}
+    ${stepperHtml()}
+    <div class="card">
+      <div class="eyebrow">Wynik ekspedycji</div>
+      <h2>Twoja Mapa Kompetencji</h2>
+      <p class="small-muted">${state.funcCurrent&&state.funcCurrent.indexOf('nie dotyczy')<0?('Obecna funkcja: <b>'+esc(state.funcCurrent)+'</b>. '):''}${state.rankHarcCurrent&&state.rankHarcCurrent.indexOf('brak')<0?('Stopień harcerski: <b>'+esc(state.rankHarcCurrent)+'</b>. '):''}${state.rankInstrCurrent&&state.rankInstrCurrent.indexOf('brak')<0?('Stopień instruktorski: <b>'+esc(state.rankInstrCurrent)+'</b>.'):''}</p>
+      <div class="navrow no-print" style="margin:0 0 4px">
+        <div></div>
+        <div class="pillrow">
+          <button class="pill ${state.radarMode==='5k'?'active':''}" data-action="radarmode" data-mode="5k">Siatka 5K</button>
+          <button class="pill ${state.radarMode==='8k'?'active':''}" data-action="radarmode" data-mode="8k">Siatka 8K</button>
+        </div>
+      </div>
+      <div class="radar-wrap">${radarSvg}</div>
+      <div class="legend">
+        <span><span class="swatch" style="background:#24463A"></span>Twój profil</span>
+        ${targetFunc?'<span><span class="swatch" style="background:#A97B33;border:1px dashed #A97B33"></span>Wymagania: '+esc(targetFunc.name)+'</span>':''}
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0">Twoje wyniki w szczegółach</h3>
+      <p class="small-muted">Poziom to nie średnia zaznaczeń, tylko ten, który najczęściej wychodzi jako granica obszaru w poszczególnych aspektach kompetencji (zgodnie z metodą pełną z Atlasu).</p>
+      <div class="score-grid">${scoreCards}</div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="margin-top:0">Twoje szlaki — dopasowanie do funkcji</h3>
+      ${targetEntry?`<p class="small-muted">Twój cel:</p>${funcRowHtml(targetEntry,true)}`:'<p class="small-muted">Nie wybrałeś funkcji docelowej — oto pełne zestawienie.</p>'}
+      ${metFuncs.length?`<p class="small-muted" style="margin-top:16px">Już się kwalifikujesz:</p>${metFuncs.map(e=>funcRowHtml(e,false)).join('')}`:''}
+      ${nearFuncs.length?`<p class="small-muted" style="margin-top:16px">Blisko celu:</p>${nearFuncs.map(e=>funcRowHtml(e,false)).join('')}`:''}
+      ${restCount>0?`<details style="margin-top:14px"><summary class="small-muted" style="cursor:pointer">Pokaż pozostałe funkcje (${restCount})</summary>${others.filter(e=>e.st.status==='far').map(e=>funcRowHtml(e,false)).join('')}</details>`:''}
+    </div>
+
+    <div class="navrow no-print">
+      <button class="btn btn-ghost" data-action="restart">↺ Zacznij od nowa</button>
+      <button class="btn btn-ghost" data-action="print">🖨 Drukuj / zapisz PDF</button>
+    </div>
+  `;
+}
+
+function render(){
+  if(state.screen==='intro') renderIntro();
+  else if(state.screen==='assess') renderAssess();
+  else if(state.screen==='results') renderResults();
+  window.scrollTo({top:0,behavior:'instant' in window ? 'instant':'auto'});
+}
+
+/* =========================================================
+   ZDARZENIA / EVENTS
+   ========================================================= */
+app.addEventListener('click', e=>{
+  const btn=e.target.closest('[data-action]');
+  if(btn){
+    const action=btn.dataset.action;
+    if(action==='start'){ state.screen='assess'; state.idx=0; render(); }
+    else if(action==='next'){
+      if(state.idx<WIZARD_ORDER.length-1){ state.idx++; render(); }
+      else { state.screen='results'; render(); }
+    }
+    else if(action==='back'){
+      if(state.idx>0){ state.idx--; render(); } else { state.screen='intro'; render(); }
+    }
+    else if(action==='skip'){
+      const key=WIZARD_ORDER[state.idx];
+      delete state.answers[key];
+      if(state.idx<WIZARD_ORDER.length-1){ state.idx++; } else { state.screen='results'; }
+      render();
+    }
+    else if(action==='jump'){
+      state.screen='assess'; state.idx=parseInt(btn.dataset.idx,10); render();
+    }
+    else if(action==='goresults'){ state.screen='results'; render(); }
+    else if(action==='radarmode'){ state.radarMode=btn.dataset.mode; render(); }
+    else if(action==='restart'){
+      state.screen='intro'; state.idx=0; state.answers={};
+      state.rankHarcCurrent=null; state.rankHarcTarget=null; state.rankInstrCurrent=null; state.rankInstrTarget=null;
+      state.funcCurrent=null; state.funcTarget=null; state.methodTrack='harcerska'; state.radarMode='8k';
+      render();
+    }
+    else if(action==='print'){ window.print(); }
+    return;
+  }
+  const pill=e.target.closest('.pill');
+  if(pill){
+    const q=pill.dataset.q, v=pill.dataset.v;
+    state[q]=v;
+    pill.parentElement.querySelectorAll('.pill').forEach(p=>p.classList.toggle('active', p===pill));
+  }
+});
+
+app.addEventListener('change', e=>{
+  const input=e.target;
+  if(input.matches('input[type=checkbox][data-level]')){
+    const key=WIZARD_ORDER[state.idx];
+    const lvl=parseInt(input.dataset.level,10);
+    const j=parseInt(input.dataset.j,10);
+    const ans=ensureAns(key);
+    if(!ans[lvl]) ans[lvl]=new Set();
+    if(input.checked) ans[lvl].add(j); else ans[lvl].delete(j);
+    updateLivePreview();
+  }
+});
+
+render();
+</script>
+</body>
+</html>
