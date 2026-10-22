@@ -1,0 +1,11 @@
+{
+  // Nazwa musi być taka sama jak nazwa Workera w panelu Cloudflare (atlas-kompetencji),
+  // inaczej build z GitHuba się nie powiedzie.
+  "name": "atlas-kompetencji",
+  "compatibility_date": "2025-10-01",
+  // Czysta strona statyczna: bez kodu Workera, tylko pliki z katalogu public/.
+  "assets": {
+    "directory": "./public"
+  },
+  "workers_dev": true
+}

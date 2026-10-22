@@ -136,6 +136,10 @@ button:focus-visible, .pill:focus-visible, .dot:focus-visible{outline:3px solid 
 
 /* ---------- results ---------- */
 .radar-wrap{display:flex;justify-content:center;padding:6px 0 4px;}
+@media (max-width:640px){
+  #app{padding:16px 10px 60px;}
+  .card{padding:18px 12px;}
+}
 .legend{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;font-size:.78rem;color:var(--ink-soft);margin-top:4px;}
 .legend span{display:inline-flex;align-items:center;gap:6px;}
 .swatch{width:14px;height:14px;border-radius:3px;display:inline-block;}
@@ -691,9 +695,13 @@ function updateLivePreview(){
 }
 
 /* ---------------- radar ---------------- */
-function buildRadar(scores, compareReq, order){
+function buildRadar(scores, compareReq, order, compact){
   order = order || RADAR_ORDER;
-  const N=order.length, cx=360, cy=300, maxR=185;
+  // compact = wąski ekran: mniejszy radar, krótkie jednowierszowe nazwy i większa
+  // czcionka względem płótna, żeby po przeskalowaniu do ~350 px nadal były czytelne.
+  const N=order.length, cx=360, cy=compact?290:300, maxR=compact?160:185;
+  const LABEL_OFFSET=compact?34:38, ICON_FS=compact?28:19, LABEL_FS=compact?20:13, RING_FS=compact?15:9;
+  const SHORT_NAME={sam:'Samodzielność',wsp:'Współpraca',kom:'Komunikacja',prz:'Przywództwo',met:'Metoda',ksz:'Kształcenie',zar:'Zarządzanie',kwa:'Kwatermistrzostwo'};
   function pt(r,i){ const a=(i*360/N)*Math.PI/180; return [cx+r*Math.sin(a), cy-r*Math.cos(a)]; }
   function ringPts(r){ return order.map((_,i)=>pt(r,i).join(',')).join(' '); }
   // Kilka nazw kompetencji jest zbyt długich, by zmieścić się w jednej linii przy
@@ -704,7 +712,9 @@ function buildRadar(scores, compareReq, order){
     'Stosowanie Metody':['Stosowanie','Metody']
   };
   function wrapLabel(name){ return LABEL_WRAP[name] || [name]; }
-  let svg=`<svg viewBox="0 0 720 620" width="720" height="620" style="max-width:100%">`;
+  let svg = compact
+    ? `<svg viewBox="36 36 664 490" width="664" height="490" style="max-width:100%;height:auto">`
+    : `<svg viewBox="0 0 720 620" width="720" height="620" style="max-width:100%;height:auto">`;
   // rings
   [1,3,5,7,9].forEach(v=>{
     const r=(v-1)/8*maxR;
@@ -714,19 +724,19 @@ function buildRadar(scores, compareReq, order){
   [1,3,5,7,9].forEach(v=>{
     const r=(v-1)/8*maxR;
     const [x,y]=pt(r,0);
-    svg+=`<text x="${x+4}" y="${y-3}" font-size="9" fill="#8a7c66" font-family="JetBrains Mono, monospace">${v}</text>`;
+    svg+=`<text x="${x+4}" y="${y-3}" font-size="${RING_FS}" fill="#8a7c66" font-family="JetBrains Mono, monospace">${v}</text>`;
   });
   // axis lines + labels
   order.forEach((k,i)=>{
     const comp=getComp(k);
     const [x,y]=pt(maxR,i);
     svg+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#C9BB9E" stroke-width="1"/>`;
-    const [lx,ly]=pt(maxR+38,i);
+    const [lx,ly]=pt(maxR+LABEL_OFFSET,i);
     let anchor='middle';
     if(lx<cx-10) anchor='end'; else if(lx>cx+10) anchor='start';
-    svg+=`<text x="${lx}" y="${ly-4}" font-size="19" text-anchor="${anchor}" font-family="Inter, sans-serif">${comp.icon}</text>`;
-    const lines=wrapLabel(comp.name.split(' (')[0]);
-    svg+=`<text x="${lx}" y="${ly+15}" font-size="13" text-anchor="${anchor}" fill="#3B2E22" font-family="Inter, sans-serif" font-weight="700">`;
+    svg+=`<text x="${lx}" y="${ly-4}" font-size="${ICON_FS}" text-anchor="${anchor}" font-family="Inter, sans-serif">${comp.icon}</text>`;
+    const lines = compact ? [SHORT_NAME[k]||comp.name] : wrapLabel(comp.name.split(' (')[0]);
+    svg+=`<text x="${lx}" y="${ly+(compact?18:15)}" font-size="${LABEL_FS}" text-anchor="${anchor}" fill="#3B2E22" font-family="Inter, sans-serif" font-weight="700">`;
     lines.forEach((line,li)=>{ svg+=`<tspan x="${lx}" dy="${li===0?0:15}">${esc(line)}</tspan>`; });
     svg+=`</text>`;
   });
@@ -780,7 +790,8 @@ function renderResults(){
 
   const targetFunc = FUNCTIONS.find(f=>f.name===state.funcTarget) || null;
   const order = state.radarMode==='5k' ? RADAR_ORDER_5K : RADAR_ORDER;
-  const radarSvg = buildRadar(scores, targetFunc?targetFunc.req:null, order);
+  const compact = !!(window.matchMedia && window.matchMedia('(max-width: 640px)').matches);
+  const radarSvg = buildRadar(scores, targetFunc?targetFunc.req:null, order, compact);
 
   let scoreCards='';
   WIZARD_ORDER.forEach((k,i)=>{
@@ -845,7 +856,7 @@ function renderResults(){
     <div class="card">
       <div class="eyebrow">Wynik ekspedycji</div>
       <h2>Twoja Mapa Kompetencji</h2>
-      <p class="small-muted">${state.funcCurrent&&state.funcCurrent.indexOf('nie dotyczy')<0?('Obecna funkcja: <b>'+esc(state.funcCurrent)+'</b>. '):''}${state.rankHarcCurrent&&state.rankHarcCurrent.indexOf('brak')<0?('Stopień harcerski: <b>'+esc(state.rankHarcCurrent)+'</b>. '):''}${state.rankInstrCurrent&&state.rankInstrCurrent.indexOf('brak')<0?('Stopień instruktorski: <b>'+esc(state.rankInstrCurrent)+'</b>.'):''}</p>
+      <p class="small-muted">${state.funcCurrent&&state.funcCurrent.indexOf('nie dotyczy')<0?('Obecna funkcja: <b>'+esc(state.funcCurrent)+'</b>. '):''}${state.rankHarcCurrent&&state.rankHarcCurrent.indexOf('brak')<0?('Stopień harcerski: <b>'+esc(state.rankHarcCurrent)+'</b>. '):''}${state.rankInstrCurrent&&state.rankInstrCurrent.indexOf('brak')<0?('Stopień instruktorski: <b>'+esc(state.rankInstrCurrent)+'</b>'+(/\.$/.test(state.rankInstrCurrent)?'':'.')):''}</p>
       <div class="navrow no-print" style="margin:0 0 4px">
         <div></div>
         <div class="pillrow">
@@ -943,6 +954,13 @@ app.addEventListener('change', e=>{
     updateLivePreview();
   }
 });
+
+// Po zmianie szerokości ekranu (np. obrót telefonu) przełącz wariant radaru.
+try{
+  const mq=window.matchMedia('(max-width: 640px)');
+  const onChange=()=>{ if(state.screen==='results') render(); };
+  if(mq.addEventListener) mq.addEventListener('change',onChange); else if(mq.addListener) mq.addListener(onChange);
+}catch(e){}
 
 render();
 </script>
