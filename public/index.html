@@ -78,7 +78,11 @@ button:focus-visible, .pill:focus-visible, .dot:focus-visible{outline:3px solid 
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px;margin-bottom:18px;}
 .intro-hero{text-align:left;margin-bottom:8px;}
 .intro-hero h1{font-size:2rem;}
-.intro-hero p{color:var(--ink-soft);max-width:60ch;}
+.intro-hero p{color:var(--ink-soft);}
+.intro-grid{display:grid;grid-template-columns:minmax(300px,5fr) 7fr;gap:18px;align-items:start;}
+.intro-grid .card{margin-bottom:0;}
+.intro-grid .intro-hero{position:sticky;top:16px;}
+@media (max-width:900px){.intro-grid{grid-template-columns:1fr;}.intro-grid .intro-hero{position:static;}}
 
 .qblock{margin:20px 0;}
 .qlabel{font-weight:600;margin-bottom:8px;color:var(--forest);}
@@ -663,6 +667,7 @@ function renderIntro(){
   const funcOptions = FUNCTIONS.map(f=>f.name).concat(['nie dotyczy / jeszcze nie wiem']);
   app.innerHTML = `
     ${headerHtml()}
+    <div class="intro-grid">
     <div class="card intro-hero">
       <div class="eyebrow">Zanim zaczniesz</div>
       <h1>Mapa kompetencji Organizacji Harcerzy</h1>
@@ -702,6 +707,7 @@ function renderIntro(){
         <button class="btn-text" data-action="pause">⏸ Przerwij i wróć na start</button>
         <button class="btn btn-primary" data-action="start">Rozpocznij ocenę →</button>
       </div>
+    </div>
     </div>
   `;
 }
