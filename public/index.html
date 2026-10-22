@@ -176,6 +176,40 @@ button:focus-visible, .pill:focus-visible, .dot:focus-visible{outline:3px solid 
 .req-chip.ok{background:#e2efe8;color:var(--forest2);}
 .req-chip.bad{background:#f3e5e0;color:var(--lvl1);}
 
+/* ---------- zakładki u góry / ekran startowy ---------- */
+.top-header{flex-wrap:wrap;}
+.tabs{display:flex;gap:4px;margin-left:auto;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;box-shadow:var(--shadow);}
+.tab{border:none;background:none;color:var(--ink-soft);font-weight:600;font-size:.86rem;padding:8px 16px;border-radius:999px;transition:.15s;}
+.tab:hover{color:var(--ink);}
+.tab.active{background:var(--forest);color:var(--card);}
+.home-hero{text-align:center;padding:38px 24px 34px;}
+.home-hero h1{font-size:2.3rem;}
+.home-hero .lead{color:var(--ink-soft);max-width:62ch;margin:10px auto 0;font-size:1.02rem;}
+.cta-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;margin:28px 0 4px;}
+.btn-cta{font-size:1.1rem;padding:16px 38px;border-radius:999px;box-shadow:0 4px 14px rgba(36,70,58,.28);}
+.cta-note{font-size:.8rem;color:var(--ink-soft);}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;}
+.home-grid .card{margin-bottom:0;}
+.home-grid h2{font-size:1.25rem;}
+.home-list{margin:8px 0 0;padding-left:20px;color:var(--ink);font-size:.92rem;}
+.home-list li{margin-bottom:6px;}
+.scale-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.scale-chip{color:#fff;font-size:.78rem;font-weight:600;padding:5px 11px;border-radius:999px;}
+.steps{counter-reset:s;list-style:none;margin:10px 0 0;padding:0;}
+.steps li{counter-increment:s;position:relative;padding:0 0 12px 40px;font-size:.92rem;}
+.steps li::before{content:counter(s);position:absolute;left:0;top:-1px;width:28px;height:28px;border-radius:50%;background:var(--forest);color:var(--card);font-weight:700;font-size:.82rem;display:flex;align-items:center;justify-content:center;}
+.howto{margin:12px 0 4px;background:var(--paper2);border-radius:8px;padding:8px 12px;font-size:.85rem;}
+.howto summary{cursor:pointer;font-weight:600;color:var(--forest);}
+.howto ol{margin:8px 0 2px;padding-left:20px;color:var(--ink-soft);}
+.howto li{margin-bottom:4px;}
+.src{font-size:.76rem;color:var(--ink-soft);margin-top:12px;}
+.src a{color:var(--brass);}
+@media (max-width:640px){
+  .tabs{margin-left:0;width:100%;justify-content:space-between;}
+  .tab{flex:1;padding:8px 6px;}
+  .home-hero h1{font-size:1.7rem;}
+}
+
 .section-title{margin-top:34px;}
 .small-muted{font-size:.8rem;color:var(--ink-soft);}
 @media print{
@@ -432,7 +466,8 @@ const RANKS_INSTR=['pwd.','phm.','hm.','— brak / nie dotyczy —'];
    STAN / STATE
    ========================================================= */
 const state={
-  screen:'intro',
+  screen:'home',
+  resume:null, // {screen, idx} — gdzie wrócić po przerwaniu
   idx:0,
   rankHarcCurrent:null, rankHarcTarget:null,
   rankInstrCurrent:null, rankInstrTarget:null,
@@ -521,14 +556,80 @@ const app=document.getElementById('app');
 
 function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
+function hasProgress(){
+  return Object.values(state.answers).some(a=>Object.values(a).some(s=>s && s.size>0))
+    || !!(state.rankHarcCurrent||state.rankHarcTarget||state.rankInstrCurrent||state.rankInstrTarget||state.funcCurrent||state.funcTarget);
+}
+
 function headerHtml(){
+  const s=state.screen;
+  const tab=(label,action,on)=>`<button class="tab${on?' active':''}" data-action="${action}">${label}</button>`;
   return `<div class="top-header no-print">
     <div class="compass-mark"></div>
     <div>
       <div class="top-title">ATLAS KOMPETENCJI</div>
       <div class="top-sub">interaktywna samoocena kompetencji instruktorskich</div>
     </div>
+    <nav class="tabs" aria-label="Główne zakładki">
+      ${tab('Start','gohome',s==='home')}
+      ${tab('Ocena','begin',s==='intro'||s==='assess')}
+      ${tab('Wyniki','goresults',s==='results')}
+    </nav>
   </div>`;
+}
+
+function renderHome(){
+  const started=hasProgress();
+  app.innerHTML = `
+    ${headerHtml()}
+    <div class="card home-hero">
+      <div class="eyebrow">Czym jest Atlas Kompetencji</div>
+      <h1>Wspólna mapa, po której mierzymy dorastanie do funkcji</h1>
+      <p class="lead">Atlas Kompetencji to harcerski model kompetencyjny. Opisuje kompetencje konkretnymi zachowaniami, a nie ogólnymi ocenami. Dzięki temu informacja zwrotna opiera się na faktach i ma wspólny punkt odniesienia w całej organizacji.</p>
+      <div class="cta-wrap">
+        <button class="btn btn-primary btn-cta" data-action="begin">${started?'Kontynuuj wypełnianie →':'Zacznij wypełniać →'}</button>
+        <div class="cta-note">${started?'Twój postęp czeka — zapisał się w tej przeglądarce.':'Możesz przerwać w dowolnym momencie — postęp zostanie zapamiętany.'}</div>
+        ${started?'<button class="btn-text" data-action="forget">Wyczyść postęp i zacznij od nowa</button>':''}
+      </div>
+    </div>
+
+    <div class="home-grid">
+      <div class="card">
+        <h2>Jak jest zbudowany</h2>
+        <ul class="home-list">
+          <li><b>Mapy kompetencji</b> — zachowania przypisane do pięciu poziomów.</li>
+          <li><b>Profile („pajączki”)</b> — wykres zbiorczy pokazujący mocne strony i kierunki rozwoju.</li>
+          <li><b>Krótki wstęp teoretyczny</b> — jak rozumieć i opisywać kompetencje.</li>
+        </ul>
+        <div class="scale-row">
+          ${LEVEL_VALUES.map((v,i)=>`<span class="scale-chip" style="background:${LEVEL_HEX[i]}">${v} · ${LEVEL_NAMES[i]}</span>`).join('')}
+        </div>
+        <p class="small-muted" style="margin-top:10px">Skala 1–9 celowo odchodzi od szkolnych ocen: poziom 5 („świadomy i sprawny”) jest poziomem optymalnym, a nie „trójką”.</p>
+      </div>
+      <div class="card">
+        <h2>Do czego służy</h2>
+        <ul class="home-list">
+          <li>Ocena potencjału i postępów kursanta (charakterystyki przed- i pokursowe).</li>
+          <li>Próby instruktorskie — czy kompetencje pasują do stopnia i funkcji.</li>
+          <li>Rozmowy przełożonego z podwładnym: mocne strony i kierunki rozwoju.</li>
+          <li>Projektowanie programów kursów.</li>
+        </ul>
+        <p class="small-muted" style="margin-top:10px">Atlas dotyczy dorosłych członków organizacji, głównie instruktorów — ale nie tylko.</p>
+      </div>
+      <div class="card">
+        <h2>Jak wypełniać</h2>
+        <ol class="steps">
+          <li><b>Powiedz, kim jesteś.</b> Stopnie, funkcja i metodyka — dzięki temu dopasujemy wyniki do Twojej drogi.</li>
+          <li><b>Czytaj mapę wierszami.</b> Każdy wiersz (kolorowy aspekt) to jedna umiejętność, a kolumny to poziomy 1–9.</li>
+          <li><b>Zaznaczaj tylko to, co faktycznie u siebie widzisz</b> — najlepiej takie zachowania, na które masz konkretny przykład z ostatnich miesięcy.</li>
+          <li><b>Idź od najniższego poziomu w górę.</b> Poziom wynika z przewagi zaznaczonych zachowań; niezaznaczone niższe zachowania staną się celami rozwoju.</li>
+          <li><b>Możesz pominąć lub wrócić.</b> Kółka u góry przenoszą do dowolnej kompetencji.</li>
+          <li><b>Przerwij, kiedy chcesz.</b> Postęp zapisuje się w tej przeglądarce — wrócisz tu przyciskiem „Kontynuuj”.</li>
+        </ol>
+      </div>
+    </div>
+    <p class="src">Opis na podstawie artykułu <a href="https://azymut.zhr.pl/2023/10/25/ale-o-co-chodzi-z-tym-atlasem-przewodnik-dla-zagubionych/" rel="noopener noreferrer" target="_blank">„Ale o co chodzi z tym Atlasem?”</a> (Azymut ZHR). Narzędzie jest samooceną pomocniczą — nie zastępuje rozmowy z przełożonym ani oceny na kursie.</p>
+  `;
 }
 
 function stepperHtml(){
@@ -561,8 +662,8 @@ function renderIntro(){
   app.innerHTML = `
     ${headerHtml()}
     <div class="card intro-hero">
-      <div class="eyebrow">Zanim wyruszysz</div>
-      <h1>Sprawdź, na jakiej jesteś mapie</h1>
+      <div class="eyebrow">Zanim zaczniesz</div>
+      <h1>Mapa kompetencji Organizacji Harcerzy</h1>
       <p>W ośmiu obszarach kompetencji zaznaczysz stwierdzenia, które Cię opisują. Na koniec zobaczysz swoją mapę kompetencji (radar) oraz sprawdzisz, do jakich funkcji już dorosłeś, a do jakich jeszcze droga przed Tobą.</p>
       <p class="small-muted">3 mapy to kompetencje harcerskie (Samodzielność, Współpraca, Komunikacja), 2 to obowiązkowe kompetencje instruktorskie (Przywództwo, Stosowanie metody), a 3 to fakultatywne kompetencje funkcyjne (Kształcenie, Zarządzanie, Kwatermistrzostwo). Zaznaczaj tylko to, co faktycznie u siebie widzisz — reszta stanie się Twoimi celami rozwoju, nie czymś do udawania.</p>
     </div>
@@ -596,7 +697,7 @@ function renderIntro(){
         ${pillRow('methodTrack', [{v:'zuchowa',l:'Zuchowa'},{v:'harcerska',l:'Harcerska'},{v:'wedrownicza',l:'Wędrownicza'}], state.methodTrack)}
       </div>
       <div class="navrow">
-        <div></div>
+        <button class="btn-text" data-action="pause">⏸ Przerwij i wróć na start</button>
         <button class="btn btn-primary" data-action="start">Rozpocznij ocenę →</button>
       </div>
     </div>
@@ -665,12 +766,23 @@ function renderAssess(){
           <div class="live-badge" id="liveBadge">${esc(badgeTxt)}</div>
         </div>
       </div>
+      <details class="howto"${state.idx===0?' open':''}>
+        <summary>Jak wypełniać tę mapę?</summary>
+        <ol>
+          <li>Czytaj wierszami: każdy kolorowy aspekt to osobna umiejętność, a kolumny to poziomy od 1 do 9.</li>
+          <li>Zaznacz zachowania, które u siebie faktycznie obserwujesz — najlepiej takie, do których masz konkretny przykład.</li>
+          <li>Zaczynaj od najniższego poziomu i idź w górę. Wynik (u góry po prawej) liczy się na bieżąco.</li>
+          <li>Nie jesteś pewien? Nie zaznaczaj. Możesz pominąć kompetencję albo wrócić do niej później.</li>
+          <li>Musisz skończyć? Kliknij „Przerwij” — postęp zostanie zapamiętany.</li>
+        </ol>
+      </details>
       <div class="comp-instruction">Mapę czytaj poziomo — wierszami (aspektami, oznaczonymi kolorem). Zaznacz tylko to, co faktycznie u siebie obserwujesz — niezaznaczone, wcześniejsze zachowania w danym wierszu staną się Twoimi celami rozwoju w raporcie.</div>
       <div class="grid-levels-wrap"><table class="aspect-table"><thead>${theadHtml}</thead><tbody>${tbodyHtml}</tbody></table></div>
       <div class="navrow">
         <div class="navrow-left">
           <button class="btn btn-ghost" data-action="back" ${state.idx===0?'disabled':''}>← Wstecz</button>
           <button class="btn-text" data-action="skip">Pomiń tę kompetencję →</button>
+          <button class="btn-text" data-action="pause">⏸ Przerwij</button>
         </div>
         <div class="navrow-right">
           <button class="btn btn-primary" data-action="next">${state.idx===WIZARD_ORDER.length-1?'Zobacz wyniki →':'Dalej →'}</button>
@@ -893,10 +1005,12 @@ function renderResults(){
 }
 
 function render(){
-  if(state.screen==='intro') renderIntro();
+  if(state.screen==='home') renderHome();
+  else if(state.screen==='intro') renderIntro();
   else if(state.screen==='assess') renderAssess();
   else if(state.screen==='results') renderResults();
   window.scrollTo({top:0,behavior:'instant' in window ? 'instant':'auto'});
+  saveState();
 }
 
 /* =========================================================
@@ -906,7 +1020,20 @@ app.addEventListener('click', e=>{
   const btn=e.target.closest('[data-action]');
   if(btn){
     const action=btn.dataset.action;
-    if(action==='start'){ state.screen='assess'; state.idx=0; render(); }
+    if(action==='begin'){
+      const r=state.resume;
+      if(r && r.screen!=='home'){ state.screen=r.screen; state.idx=r.idx||0; }
+      else { state.screen='intro'; }
+      state.resume=null; render();
+    }
+    else if(action==='gohome' || action==='pause'){
+      if(state.screen!=='home') state.resume={screen:state.screen, idx:state.idx};
+      state.screen='home'; render();
+    }
+    else if(action==='forget'){
+      if(confirm('Usunąć wszystkie zaznaczenia i zacząć od nowa?')){ resetAll(); render(); }
+    }
+    else if(action==='start'){ state.screen='assess'; state.idx=0; render(); }
     else if(action==='next'){
       if(state.idx<WIZARD_ORDER.length-1){ state.idx++; render(); }
       else { state.screen='results'; render(); }
@@ -925,12 +1052,7 @@ app.addEventListener('click', e=>{
     }
     else if(action==='goresults'){ state.screen='results'; render(); }
     else if(action==='radarmode'){ state.radarMode=btn.dataset.mode; render(); }
-    else if(action==='restart'){
-      state.screen='intro'; state.idx=0; state.answers={};
-      state.rankHarcCurrent=null; state.rankHarcTarget=null; state.rankInstrCurrent=null; state.rankInstrTarget=null;
-      state.funcCurrent=null; state.funcTarget=null; state.methodTrack='harcerska'; state.radarMode='8k';
-      render();
-    }
+    else if(action==='restart'){ resetAll(); state.screen='intro'; render(); }
     else if(action==='print'){ window.print(); }
     return;
   }
@@ -939,6 +1061,7 @@ app.addEventListener('click', e=>{
     const q=pill.dataset.q, v=pill.dataset.v;
     state[q]=v;
     pill.parentElement.querySelectorAll('.pill').forEach(p=>p.classList.toggle('active', p===pill));
+    saveState();
   }
 });
 
@@ -952,8 +1075,52 @@ app.addEventListener('change', e=>{
     if(!ans[lvl]) ans[lvl]=new Set();
     if(input.checked) ans[lvl].add(j); else ans[lvl].delete(j);
     updateLivePreview();
+    saveState();
   }
 });
+
+/* =========================================================
+   ZAPIS POSTĘPU (tylko w tej przeglądarce, localStorage)
+   ========================================================= */
+const STORE_KEY='atlas-kompetencji-v1';
+const SAVED_FIELDS=['rankHarcCurrent','rankHarcTarget','rankInstrCurrent','rankInstrTarget','funcCurrent','funcTarget','methodTrack','radarMode'];
+
+function saveState(){
+  try{
+    const o={resume: state.screen==='home' ? state.resume : {screen:state.screen, idx:state.idx}, answers:{}};
+    SAVED_FIELDS.forEach(f=>o[f]=state[f]);
+    Object.keys(state.answers).forEach(k=>{
+      o.answers[k]={};
+      Object.keys(state.answers[k]).forEach(l=>o.answers[k][l]=[...state.answers[k][l]]);
+    });
+    localStorage.setItem(STORE_KEY, JSON.stringify(o));
+  }catch(e){}
+}
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    if(!raw) return;
+    const o=JSON.parse(raw);
+    SAVED_FIELDS.forEach(f=>{ if(o[f]!==undefined) state[f]=o[f]; });
+    Object.keys(o.answers||{}).forEach(k=>{
+      if(!COMP[k]) return;
+      state.answers[k]={};
+      Object.keys(o.answers[k]).forEach(l=>state.answers[k][l]=new Set(o.answers[k][l]));
+    });
+    if(o.resume && o.resume.screen && o.resume.screen!=='home') state.resume=o.resume;
+  }catch(e){}
+}
+
+function resetAll(){
+  state.idx=0; state.answers={}; state.resume=null;
+  state.rankHarcCurrent=null; state.rankHarcTarget=null; state.rankInstrCurrent=null; state.rankInstrTarget=null;
+  state.funcCurrent=null; state.funcTarget=null; state.methodTrack='harcerska'; state.radarMode='8k';
+  state.screen='home';
+  try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+}
+
+loadState();
 
 // Po zmianie szerokości ekranu (np. obrót telefonu) przełącz wariant radaru.
 try{
